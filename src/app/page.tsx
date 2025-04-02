@@ -5,7 +5,7 @@ import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
-import { getProgram, getProgramStatePda, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerRegistryPda, PROGRAM_ID, getTrackerStreakPda, getNormalizedCurrentDate } from './utils/program';
+import { getProgram, getProgramStatePda, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerRegistryPda, PROGRAM_ID, getTrackerStreakPda, getNormalizedCurrentDate, getTrackerStatsListPda } from './utils/program';
 import { PublicKey } from '@solana/web3.js';
 
 // Add type declaration for window.solana
@@ -28,7 +28,8 @@ interface TrackerStats {
 
 export default function HomePage() {
   const { publicKey, connected } = useWallet();
-  const { connection } = useConnection();
+  const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+  // const { connection } = useConnection();
   const anchorWallet = useAnchorWallet();
   const [trackers, setTrackers] = useState<string[]>([]);
   const [selectedTracker, setSelectedTracker] = useState<string | null>(null);
@@ -55,6 +56,7 @@ export default function HomePage() {
     if (connected && trackerId !== null) {
       fetchStats();
       fetchStreak();
+      fetchTrackerStatusList();
     }
   }, [connected, trackerId]);
 
@@ -63,7 +65,6 @@ export default function HomePage() {
     if (!publicKey) return;
 
     try {
-      
       console.log("connection", connection);
       console.log("wallet", anchorWallet);
       const provider = new AnchorProvider(connection, window.solana, {
@@ -74,7 +75,7 @@ export default function HomePage() {
       const program = getProgram(provider);
       
       const trackerRegistry = getTrackerRegistryPda();
-    
+      console.log("trackerRegistry", trackerRegistry.toBase58());
       const trackerNames = await program.methods
       .getAllTrackers()
       .accounts({
@@ -177,6 +178,34 @@ export default function HomePage() {
     }
   };
 
+  const fetchTrackerStatusList = async () => {
+    if (!publicKey || selectedTracker === null || trackerId === null) return;
+
+    try {
+      const provider = new AnchorProvider(connection, window.solana, {
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed'
+      });
+      const program = getProgram(provider);
+    
+      const trackerStatsListPda = getTrackerStatsListPda(trackerId);
+      const stats = await program.methods
+      .getAllTrackerStats(trackerId)
+      .accounts({
+        trackerStatsList: trackerStatsListPda,
+      })
+      .view();
+
+
+      for (const stat of stats) {
+        console.log("stat date, totalCount, uniqueUsers", stat.date.toNumber(), stat.totalCount, stat.uniqueUsers);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching streak:', error);
+    }
+  };
+
   const handleAddData = async () => {
     if (!publicKey || selectedTracker === null || trackerId === null || !count) return;
 
@@ -194,6 +223,7 @@ export default function HomePage() {
       const normalizedCurrentDate = getNormalizedCurrentDate();
       const trackingStatsPda = getTrackerStatsPda(trackerId, normalizedCurrentDate);
       const trackerStreakPda = getTrackerStreakPda(provider, trackerId);
+      const trackerStatsListPda = getTrackerStatsListPda(trackerId);
 
       await program.methods
       .addTrackingData(trackerId, parseInt(count), new BN(normalizedCurrentDate))
@@ -204,12 +234,14 @@ export default function HomePage() {
         systemProgram: web3.SystemProgram.programId,
         trackerStats: trackingStatsPda,
         trackerStreak: trackerStreakPda,
+        trackerStatsList: trackerStatsListPda,
       })
       .rpc();
 
       setCount('');
       fetchStats();
       fetchStreak();
+      fetchTrackerStatusList();
     } catch (error) {
       console.error('Error adding tracking data:', error);
     } finally {

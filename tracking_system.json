@@ -62,6 +62,10 @@
           "writable": true
         },
         {
+          "name": "tracker_stats_list",
+          "writable": true
+        },
+        {
           "name": "tracker_streak",
           "writable": true
         }
@@ -167,6 +171,37 @@
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "get_all_tracker_stats",
+      "discriminator": [
+        243,
+        61,
+        140,
+        134,
+        128,
+        198,
+        38,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "tracker_stats_list"
+        }
+      ],
+      "args": [
+        {
+          "name": "tracker_id",
+          "type": "u32"
+        }
+      ],
+      "returns": {
+        "vec": {
+          "defined": {
+            "name": "TrackerStatsAccount"
+          }
+        }
+      }
     },
     {
       "name": "get_all_trackers",
@@ -434,6 +469,19 @@
       ]
     },
     {
+      "name": "TrackerStatsList",
+      "discriminator": [
+        84,
+        159,
+        24,
+        203,
+        64,
+        174,
+        187,
+        120
+      ]
+    },
+    {
       "name": "TrackerStreakAccount",
       "discriminator": [
         44,
@@ -554,6 +602,28 @@
           {
             "name": "unique_users",
             "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TrackerStatsList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tracker_id",
+            "type": "u32"
+          },
+          {
+            "name": "stats",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "TrackerStatsAccount"
+                }
+              }
+            }
           }
         ]
       }

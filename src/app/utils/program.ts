@@ -73,8 +73,19 @@ export const getTrackerStreakPda = (provider: AnchorProvider, trackerId: number)
   return trackerStreakPda;
 };
 
+export const getTrackerStatsListPda = (trackerId: number) => {
+  const [trackerStatsListPda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("tracker_stats_list"),
+      new Uint8Array(new Array(18).fill(trackerId)),
+    ],
+    PROGRAM_ID
+  );
+  return trackerStatsListPda;
+};
+
 export const getNormalizedCurrentDate = () => {
     const currentDate = Math.floor(Date.now() / 1000);
     const oneDay = 86400;
-    return Math.floor(currentDate / oneDay) * oneDay - 4 * oneDay;
+    return Math.floor(currentDate / oneDay) * oneDay - 1 * oneDay;
 };

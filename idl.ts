@@ -68,6 +68,10 @@ export type TrackingSystem = {
           "writable": true
         },
         {
+          "name": "trackerStatsList",
+          "writable": true
+        },
+        {
           "name": "trackerStreak",
           "writable": true
         }
@@ -173,6 +177,37 @@ export type TrackingSystem = {
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "getAllTrackerStats",
+      "discriminator": [
+        243,
+        61,
+        140,
+        134,
+        128,
+        198,
+        38,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "trackerStatsList"
+        }
+      ],
+      "args": [
+        {
+          "name": "trackerId",
+          "type": "u32"
+        }
+      ],
+      "returns": {
+        "vec": {
+          "defined": {
+            "name": "trackerStatsAccount"
+          }
+        }
+      }
     },
     {
       "name": "getAllTrackers",
@@ -440,6 +475,19 @@ export type TrackingSystem = {
       ]
     },
     {
+      "name": "trackerStatsList",
+      "discriminator": [
+        84,
+        159,
+        24,
+        203,
+        64,
+        174,
+        187,
+        120
+      ]
+    },
+    {
       "name": "trackerStreakAccount",
       "discriminator": [
         44,
@@ -560,6 +608,28 @@ export type TrackingSystem = {
           {
             "name": "uniqueUsers",
             "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "trackerStatsList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "trackerId",
+            "type": "u32"
+          },
+          {
+            "name": "stats",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "trackerStatsAccount"
+                }
+              }
+            }
           }
         ]
       }
