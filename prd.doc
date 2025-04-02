@@ -1,0 +1,5 @@
+1. This will be a nextJs app, which will used for tracking the user data
+2. I am sharing the smart contract code of solana in lib.rs, and IDL as well in idl.json
+3. Please create a simple app, with 2 pages, 1 page admin and 2 page user interaction 
+4. In admin page, once admin is connected through he get an option to create a new tracker
+5. In user page, user can see todays current stats, his current streak. And he have an option to log todays data. 

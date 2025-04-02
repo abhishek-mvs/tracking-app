@@ -1,103 +1,288 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
+import { getProgram, getProgramStatePda, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerRegistryPda, PROGRAM_ID, getTrackerStreakPda, getNormalizedCurrentDate } from './utils/program';
+import { PublicKey } from '@solana/web3.js';
+
+// Add type declaration for window.solana
+declare global {
+  interface Window {
+    solana?: any;
+  }
+}
+
+interface Tracker {
+  id: number;
+  title: string;
+  description: string;
+}
+
+interface TrackerStats {
+  totalCount: number;
+  uniqueUsers: number;
+}
+
+export default function HomePage() {
+  const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
+  const anchorWallet = useAnchorWallet();
+  const [trackers, setTrackers] = useState<string[]>([]);
+  const [selectedTracker, setSelectedTracker] = useState<string | null>(null);
+  const [trackerId, setTrackerId] = useState<any | null>(null);
+  const [count, setCount] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<TrackerStats | null>(null);
+  const [streak, setStreak] = useState<number>(0);
+
+  useEffect(() => {
+    if (connected) {
+      fetchTrackers();
+    }
+  }, [connected]);
+
+  useEffect(() => {
+    if (connected && selectedTracker !== null) {
+      fetchTracker();
+    }
+  }, [connected, selectedTracker]);
+
+
+  useEffect(() => {
+    if (connected && trackerId !== null) {
+      fetchStats();
+      fetchStreak();
+    }
+  }, [connected, trackerId]);
+
+  
+  const fetchTrackers = async () => {
+    if (!publicKey) return;
+
+    try {
+      
+      console.log("connection", connection);
+      console.log("wallet", anchorWallet);
+      const provider = new AnchorProvider(connection, window.solana, {
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed'
+      });
+      console.log("provider", provider.publicKey?.toBase58());
+      const program = getProgram(provider);
+      
+      const trackerRegistry = getTrackerRegistryPda();
+    
+      const trackerNames = await program.methods
+      .getAllTrackers()
+      .accounts({
+        trackerRegistry: trackerRegistry,
+      })
+      .view();
+      console.log("trackerNames", trackerNames);
+      setTrackers(trackerNames);
+    } catch (error) {
+      console.error('Error fetching trackers:', error);
+    }
+  };
+
+  const fetchTracker = async () => {
+    if (!publicKey || selectedTracker === null) return;
+
+    try {
+      const provider = new AnchorProvider(connection, window.solana, {
+        commitment: 'confirmed',  
+        preflightCommitment: 'confirmed'
+      });
+      const program = getProgram(provider);
+      const [trackerPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("tracker"), Buffer.from(selectedTracker)],
+        program.programId
+      );
+      const tracker = await program.account.tracker.fetch(trackerPda);
+      const trackerIdValue = tracker.id;
+      setTrackerId(trackerIdValue);
+      console.log("tracker", tracker);
+    } catch (error) {
+      console.error('Error fetching tracker:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (!publicKey || trackerId === null || selectedTracker === null) return;
+
+    try {
+      const provider = new AnchorProvider(connection, window.solana, {
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed'
+      });
+      const program = getProgram(provider);
+      const trackerPda = getTrackerPda(selectedTracker);
+      
+      const normalizedCurrentDate = getNormalizedCurrentDate();
+      const trackerStats = getTrackerStatsPda(trackerId, normalizedCurrentDate);
+
+      const stats = await program.methods
+      .getTrackerStats(trackerId, new BN(normalizedCurrentDate))
+      .accounts({
+        trackerStats: trackerStats,
+        tracker: trackerPda,
+      })
+      .view();
+
+      console.log("stats", stats);
+      setStats(stats as TrackerStats);
+    } catch (error) {
+      console.log("error", error);
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchStreak = async () => {
+    if (!publicKey || selectedTracker === null || trackerId === null) return;
+
+    try {
+      const provider = new AnchorProvider(connection, window.solana, {
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed'
+      });
+      const program = getProgram(provider);
+    
+      const trackingDataPda = getTrackingDataPda(provider, trackerId);
+      const trackerStreakPda = getTrackerStreakPda(provider, trackerId);
+
+      const tracks = await program.methods
+      .getUserTrackingData(trackerId)
+      .accounts({
+        trackingData: trackingDataPda,
+        user: provider.wallet.publicKey,
+      })
+      .view();
+      console.log("tracks", tracks);
+      const streak = await program.methods
+      .getUserStreak(trackerId)
+      .accounts({
+        trackerStreak: trackerStreakPda,
+        user: provider.wallet.publicKey,
+      })
+      .view();
+
+
+      console.log("streak", streak);
+      setStreak(Number(streak.streak));
+    } catch (error) {
+      console.error('Error fetching streak:', error);
+    }
+  };
+
+  const handleAddData = async () => {
+    if (!publicKey || selectedTracker === null || trackerId === null || !count) return;
+
+    try {
+      setLoading(true);
+      const provider = new AnchorProvider(connection, window.solana, {
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed'
+      });
+      const program = getProgram(provider);
+      const trackerPda = getTrackerPda(selectedTracker);
+      const trackingData = getTrackingDataPda(provider, trackerId);
+      
+
+      const normalizedCurrentDate = getNormalizedCurrentDate();
+      const trackingStatsPda = getTrackerStatsPda(trackerId, normalizedCurrentDate);
+      const trackerStreakPda = getTrackerStreakPda(provider, trackerId);
+
+      await program.methods
+      .addTrackingData(trackerId, parseInt(count), new BN(normalizedCurrentDate))
+      .accounts({
+        trackingData: trackingData,
+        tracker: trackerPda,
+        user: provider.wallet.publicKey,
+        systemProgram: web3.SystemProgram.programId,
+        trackerStats: trackingStatsPda,
+        trackerStreak: trackerStreakPda,
+      })
+      .rpc();
+
+      setCount('');
+      fetchStats();
+      fetchStreak();
+    } catch (error) {
+      console.error('Error adding tracking data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Tracking Dashboard</h1>
+        <WalletMultiButton />
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {connected ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <h2 className="text-xl font-bold mb-4">Select Tracker</h2>
+            <div className="space-y-2">
+              {trackers.map((tracker) => (
+                <button
+                  key={tracker}
+                  className={`w-full text-left p-3 rounded ${
+                    selectedTracker === tracker
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                  onClick={() => setSelectedTracker(tracker)}
+                >
+                  <div className="font-semibold">{tracker}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {selectedTracker !== null && (
+            <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+              <h2 className="text-xl font-bold mb-4">Tracker Stats</h2>
+              {stats && (
+                <div className="mb-4">
+                  <div className="text-lg">Total Count: {stats.totalCount}</div>
+                  <div className="text-lg">Unique Users: {stats.uniqueUsers}</div>
+                  <div className="text-lg">Your Streak: {streak} days</div>
+                </div>
+              )}
+              <div className="mt-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="count">
+                  Today's Count
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="count"
+                  type="number"
+                  placeholder="Enter today's count"
+                  value={count}
+                  onChange={(e) => setCount(e.target.value)}
+                />
+                <button
+                  className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  onClick={handleAddData}
+                  disabled={loading || !count}
+                >
+                  {loading ? 'Adding...' : 'Add Data'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ) : (
+        <div className="text-center">
+          <p className="text-xl">Please connect your wallet to view and add tracking data.</p>
+        </div>
+      )}
     </div>
   );
 }
