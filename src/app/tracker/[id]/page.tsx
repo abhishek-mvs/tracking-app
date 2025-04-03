@@ -8,6 +8,8 @@ import { getProgram, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getT
 import { useRouter } from 'next/navigation';
 import TrackerStreakGraph from '../../components/TrackerStreakGraph';
 import { PublicKey } from '@solana/web3.js';
+import DailyTrackingStatus from '@/app/components/DailyTrackingStatus';
+import { toast } from 'react-toastify';
 
 interface TrackerStats {
   totalCount: number;
@@ -35,7 +37,7 @@ interface StreakData {
 export default function TrackerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { publicKey, connected } = useWallet();
-//   const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+  // const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
   const { connection } = useConnection();
   const trackerTitle = decodeURIComponent(params.id);
   const [count, setCount] = useState('');
@@ -244,6 +246,50 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
     }
   };
 
+  const handleTrackStatus = async (succeeded: boolean) => {
+    if (!publicKey || trackerId === null) return;
+
+    try {
+      const provider = new AnchorProvider(connection, window.solana, {
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed'
+      });
+      const program = getProgram(provider);
+      const trackerPda = getTrackerPda(trackerTitle);
+      const trackingDataPda = getTrackingDataPda(provider, trackerId);
+      const normalizedCurrentDate = getNormalizedCurrentDate();
+      const trackingStatsPda = getTrackerStatsPda(trackerId, normalizedCurrentDate);
+      const trackerStreakPda = getTrackerStreakPda(provider, trackerId);
+      const trackerStatsListPda = getTrackerStatsListPda(trackerId);
+
+      await program.methods
+        .addTrackingData(trackerId, succeeded ? 1 : 0, new BN(normalizedCurrentDate))
+        .accounts({
+          trackingData: trackingDataPda,
+          tracker: trackerPda,
+          user: provider.wallet.publicKey,
+          systemProgram: web3.SystemProgram.programId,
+          trackerStats: trackingStatsPda,
+          trackerStreak: trackerStreakPda,
+          trackerStatsList: trackerStatsListPda,
+        } as any)
+        .rpc();
+
+      // Refresh all the data after tracking
+      await Promise.all([
+        fetchTrackerList(),
+        fetchStats(),
+        fetchStreak(),
+        fetchTrackerStatusList()
+      ]);
+      
+      toast.success('Successfully tracked your status!');
+    } catch (error) {
+      console.error('Error tracking status:', error);
+      toast.error('Failed to track status. Please try again.');
+    }
+  };
+
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
       <div className="flex justify-between items-center mb-4 sm:mb-8 gap-2">
@@ -282,32 +328,35 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
               </div>
             </div>
           )}
-          <div className="mt-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Did you maintain your streak today?
-            </label>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              <button
-                className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded focus:outline-none focus:shadow-outline text-sm sm:text-base"
-                onClick={() => {
-                  setCount('1');
-                  handleAddData();
-                }}
-                disabled={loading}
-              >
-                {loading ? 'Adding...' : 'Hurray! 🎉'}
-              </button>
-              <button
-                className="flex-1 bg-red-500 hover:bg-red-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded focus:outline-none focus:shadow-outline text-sm sm:text-base"
-                onClick={() => {
-                  setCount('0');
-                  handleAddData();
-                }}
-                disabled={loading}
-              >
-                {loading ? 'Adding...' : 'Nah! 😔'}
-              </button>
-            </div>
+          <div className="mt-6">
+            {trackerList.length === 0 ? (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-center">
+                  Did you maintain your streak today?
+                </h3>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                  <button
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded transition-colors"
+                    onClick={() => handleTrackStatus(true)}
+                    disabled={loading}
+                  >
+                    Hurray! 🎉
+                  </button>
+                  <button
+                    className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded transition-colors"
+                    onClick={() => handleTrackStatus(false)}
+                    disabled={loading}
+                  >
+                    Nah! 😔
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <DailyTrackingStatus 
+                trackerList={trackerList} 
+                onTrack={handleTrackStatus}
+              />
+            )}
           </div>
         </div>
 
@@ -323,7 +372,7 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
                 <span className="font-semibold">Total Check-ins Today:</span> {stats.totalCount}
               </div>
               <div className="text-base sm:text-lg">
-                <span className="font-semibold">Success Rate:</span> {((stats.totalCount / stats.uniqueUsers) * 100).toFixed(1)}%
+                <span className="font-semibold">Success Rate:</span> {stats.uniqueUsers > 0 ? ((stats.totalCount / stats.uniqueUsers) * 100).toFixed(1) : '0'}%
               </div>
             </div>
           )}
@@ -331,7 +380,7 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
 
         {trackerList.length > 0 && (
           <div className="col-span-1 sm:col-span-2 bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
-            <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4">No-Smoking Streak & Track Status</h2>
+            <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4 text-center">Streaks & Stats</h2>
             <TrackerStreakGraph trackerList={trackerList} trackerStatsList={trackerStatsList} />
           </div>
         )}

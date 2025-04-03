@@ -14,43 +14,33 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
   useEffect(() => {
     if (!chartRef.current || !trackerList.length) return;
 
-    // Sort data by date
     const sortedData = [...trackerList].sort((a, b) => a.date - b.date);
     const sortedStatsData = [...trackerStatsList].sort((a, b) => a.date - b.date);
 
-    // Calculate streak for each day
     let currentStreak = 0;
-    let maxStreak = 0;
     const streakData = sortedData.map((item) => {
       if (item.count === 1) {
         currentStreak++;
-        maxStreak = Math.max(maxStreak, currentStreak);
       } else {
         currentStreak = 0;
       }
       return {
-        date: format(new Date(item.date * 1000), 'MMM dd, yyyy'),
-        timestamp: item.date,
+        date: format(new Date(item.date * 1000), 'MMM dd'),
         streak: currentStreak,
       };
     });
 
-    // Create a map of dates to community success rates
     const statsMap = new Map(
       sortedStatsData.map(item => [
-        format(new Date(item.date * 1000), 'MMM dd, yyyy'),
+        format(new Date(item.date * 1000), 'MMM dd'),
         item.uniqueUsers > 0 ? Number((item.totalCount / item.uniqueUsers * 100).toFixed(2)) : 0
       ])
     );
 
-    // Use streak dates as source of truth and get corresponding community success rates
     const communitySuccessData = streakData.map(streakItem => ({
       date: streakItem.date,
       percentage: statsMap.get(streakItem.date) || 0
     }));
-    
-    console.log("Aligned communitySuccessData", communitySuccessData);
-    console.log("Streak data", streakData);
 
     if (chartInstance.current) {
       chartInstance.current.destroy();
@@ -67,23 +57,28 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
           {
             label: 'User Streak',
             data: streakData.map(d => d.streak),
-            backgroundColor: 'rgba(99, 102, 241, 0.5)',
+            backgroundColor: 'rgba(99, 102, 241, 0.7)',
             yAxisID: 'y',
             order: 2,
-            barThickness: 20,
+            barThickness: 'flex',
+            categoryPercentage: 1.0,
+            borderSkipped: false,
+            borderRadius: { topLeft: 5, topRight: 5 },
           },
           {
             label: 'Community Success Rate %',
             data: communitySuccessData.map(d => d.percentage),
             borderColor: 'rgb(255, 99, 132)',
-            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
             type: 'line',
             yAxisID: 'y1',
             order: 1,
             fill: true,
-            tension: 0.1,
+            tension: 0.3,
             pointRadius: 4,
             pointHoverRadius: 6,
+            pointStyle: 'circle',
+            pointBackgroundColor: 'rgb(255, 99, 132)',
           },
         ],
       },
@@ -96,41 +91,42 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
         },
         scales: {
           x: {
+            grid: {
+              display: true,
+              color: 'rgba(0, 0, 0, 0.1)',
+            },
             ticks: {
               maxRotation: 45,
-              minRotation: 45
-            }
+              minRotation: 45,
+            },
           },
           y: {
-            type: 'linear',
-            display: true,
-            position: 'left',
+            beginAtZero: true,
+            grid: {
+              display: true,
+              color: 'rgba(0, 0, 0, 0.1)',
+            },
             title: {
               display: true,
               text: 'User Streak (Days)',
               font: {
-                size: 12
-              }
+                size: 12,
+                weight: 'normal',
+              },
             },
-            min: 0,
-            max: maxStreak + 1,
             ticks: {
               stepSize: 1,
-              font: {
-                size: 11
-              }
-            }
+            },
           },
           y1: {
-            type: 'linear',
-            display: true,
             position: 'right',
             title: {
               display: true,
               text: 'Community Success Rate %',
               font: {
-                size: 12
-              }
+                size: 12,
+                weight: 'normal',
+              },
             },
             min: 0,
             max: 100,
@@ -138,38 +134,34 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
               drawOnChartArea: false,
             },
             ticks: {
-              callback: function(value) {
-                return value + '%';
-              },
-              stepSize: 20,
-              font: {
-                size: 11
-              }
-            }
+              callback: value => `${value}%`,
+            },
           },
         },
         plugins: {
           legend: {
             position: 'top',
+            align: 'start',
             labels: {
+              usePointStyle: true,
+              padding: 20,
+              boxWidth: 40,
+              boxHeight: 8,
               font: {
-                size: 12
-              }
-            }
+                size: 12,
+              },
+            },
           },
           tooltip: {
             callbacks: {
-              label: function(context) {
+              label: context => {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
-                if (label.includes('Success Rate')) {
-                  return `${label}: ${value.toFixed(1)}%`;
-                }
-                return `${label}: ${value} days`;
-              }
-            }
-          }
-        }
+                return label.includes('Success Rate') ? `${label}: ${value.toFixed(1)}%` : `${label}: ${value} days`;
+              },
+            },
+          },
+        },
       },
     });
 
