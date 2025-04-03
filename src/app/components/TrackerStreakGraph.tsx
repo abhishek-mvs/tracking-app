@@ -28,17 +28,27 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
       }
       return {
         date: format(new Date(item.date * 1000), 'MMM dd, yyyy'),
+        timestamp: item.date,
         streak: currentStreak,
       };
     });
 
-    // Calculate community success rate from trackerStatsList
-    const communitySuccessData = sortedStatsData.map((item) => {
-      return {
-        date: format(new Date(item.date * 1000), 'MMM dd, yyyy'),
-        percentage: item.uniqueUsers > 0 ? (item.totalCount / item.uniqueUsers) * 100 : 0,
-      };
-    });
+    // Create a map of dates to community success rates
+    const statsMap = new Map(
+      sortedStatsData.map(item => [
+        format(new Date(item.date * 1000), 'MMM dd, yyyy'),
+        item.uniqueUsers > 0 ? Number((item.totalCount / item.uniqueUsers * 100).toFixed(2)) : 0
+      ])
+    );
+
+    // Use streak dates as source of truth and get corresponding community success rates
+    const communitySuccessData = streakData.map(streakItem => ({
+      date: streakItem.date,
+      percentage: statsMap.get(streakItem.date) || 0
+    }));
+    
+    console.log("Aligned communitySuccessData", communitySuccessData);
+    console.log("Streak data", streakData);
 
     if (chartInstance.current) {
       chartInstance.current.destroy();
@@ -69,6 +79,8 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
             order: 1,
             fill: true,
             tension: 0.1,
+            pointRadius: 4,
+            pointHoverRadius: 6,
           },
         ],
       },

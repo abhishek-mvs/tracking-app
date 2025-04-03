@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/tracking_system.json`.
  */
 export type TrackingSystem = {
-  "address": "7TBRqAzFS8FLEjHU2ppAWkU4Um8kQeBztmkLZUNjTrKB",
+  "address": "FfjNyygvYw56Qaq1MUj34U3nMb3uVb5NjCUjjRzMashR",
   "metadata": {
     "name": "trackingSystem",
     "version": "0.1.0",
@@ -519,6 +519,11 @@ export type TrackingSystem = {
       "code": 6000,
       "name": "invalidTrackerId",
       "msg": "Invalid tracker ID"
+    },
+    {
+      "code": 6001,
+      "name": "trackingDataAlreadyExists",
+      "msg": "Tracking data already exists for this date"
     }
   ],
   "types": [

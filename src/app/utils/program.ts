@@ -5,7 +5,7 @@ import { TrackingSystem } from '../../../idl';
 import tracking_system from '../../../tracking_system.json' assert { type: 'json' };
 import { program } from '@coral-xyz/anchor/dist/cjs/native/system';
 
-export const PROGRAM_ID = new PublicKey('7TBRqAzFS8FLEjHU2ppAWkU4Um8kQeBztmkLZUNjTrKB');
+export const PROGRAM_ID = new PublicKey('FfjNyygvYw56Qaq1MUj34U3nMb3uVb5NjCUjjRzMashR');
 
 export const getProgram = (provider: AnchorProvider) => {    
   return new Program<TrackingSystem>(tracking_system, provider);
@@ -87,5 +87,5 @@ export const getTrackerStatsListPda = (trackerId: number) => {
 export const getNormalizedCurrentDate = () => {
     const currentDate = Math.floor(Date.now() / 1000);
     const oneDay = 86400;
-    return Math.floor(currentDate / oneDay) * oneDay + 1 * oneDay;
+    return Math.floor(currentDate / oneDay) * oneDay - 0 * oneDay;
 };

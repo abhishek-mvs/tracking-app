@@ -85,13 +85,14 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
       
       const normalizedCurrentDate = getNormalizedCurrentDate();
       const trackerPda = getTrackerPda(trackerTitle);
-      const trackerStats = getTrackerStatsPda(trackerId, normalizedCurrentDate);
+      const trackerStatsPda = getTrackerStatsPda(trackerId, normalizedCurrentDate);
 
+      console.log("trackerStatsPda", trackerStatsPda.toBase58());
       const stats = await program.methods
       .getTrackerStats(trackerId, new BN(normalizedCurrentDate))
       // @ts-ignore - Account structure is correct but TypeScript types are mismatched
       .accounts({
-        trackerStats: trackerStats,
+        trackerStats: trackerStatsPda,
         tracker: trackerPda,
       } as any)
       .view();
@@ -175,13 +176,13 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
         trackerStatsList: trackerStatsListPda,
       })
       .view();
-
+      
       const formattedStats = stats.map((stat: any) => ({
         date: stat.date.toNumber(),
         totalCount: stat.totalCount,
         uniqueUsers: stat.uniqueUsers
       }));
-
+      console.log("formattedStats", formattedStats);
       setTrackerStatsList(formattedStats);
     } catch (error) {
       console.error('Error fetching tracker status list:', error);
@@ -257,24 +258,31 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
             </div>
           )}
           <div className="mt-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="count">
-              Today's Count
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Did you maintain your streak today?
             </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="count"
-              type="number"
-              placeholder="Enter today's count"
-              value={count}
-              onChange={(e) => setCount(e.target.value)}
-            />
-            <button
-              className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              onClick={handleAddData}
-              disabled={loading || !count}
-            >
-              {loading ? 'Adding...' : 'Add Data'}
-            </button>
+            <div className="flex gap-4">
+              <button
+                className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline"
+                onClick={() => {
+                  setCount('1');
+                  handleAddData();
+                }}
+                disabled={loading}
+              >
+                {loading ? 'Adding...' : 'Hurray! 🎉'}
+              </button>
+              <button
+                className="flex-1 bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline"
+                onClick={() => {
+                  setCount('0');
+                  handleAddData();
+                }}
+                disabled={loading}
+              >
+                {loading ? 'Adding...' : 'Nah! 😔'}
+              </button>
+            </div>
           </div>
         </div>
 

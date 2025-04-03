@@ -1,5 +1,5 @@
 {
-  "address": "7TBRqAzFS8FLEjHU2ppAWkU4Um8kQeBztmkLZUNjTrKB",
+  "address": "FfjNyygvYw56Qaq1MUj34U3nMb3uVb5NjCUjjRzMashR",
   "metadata": {
     "name": "tracking_system",
     "version": "0.1.0",
@@ -513,6 +513,11 @@
       "code": 6000,
       "name": "InvalidTrackerId",
       "msg": "Invalid tracker ID"
+    },
+    {
+      "code": 6001,
+      "name": "TrackingDataAlreadyExists",
+      "msg": "Tracking data already exists for this date"
     }
   ],
   "types": [
