@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
+import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
 import { getProgram, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerStreakPda, getNormalizedCurrentDate, getTrackerStatsListPda } from '../../utils/program';
 import { useRouter } from 'next/navigation';
 import TrackerStreakGraph from '../../components/TrackerStreakGraph';
+import { PublicKey } from '@solana/web3.js';
 
 interface TrackerStats {
   totalCount: number;
@@ -27,7 +28,8 @@ interface TrackerData {
 export default function TrackerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { publicKey, connected } = useWallet();
-  const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+//   const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+  const { connection } = useConnection();
   const trackerTitle = decodeURIComponent(params.id);
   const [count, setCount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -87,10 +89,11 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
 
       const stats = await program.methods
       .getTrackerStats(trackerId, new BN(normalizedCurrentDate))
+      // @ts-ignore - Account structure is correct but TypeScript types are mismatched
       .accounts({
         trackerStats: trackerStats,
         tracker: trackerPda,
-      })
+      } as any)
       .view();
 
       setStats(stats as TrackerStats);
@@ -213,7 +216,7 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
         trackerStats: trackingStatsPda,
         trackerStreak: trackerStreakPda,
         trackerStatsList: trackerStatsListPda,
-      })
+      } as any)
       .rpc();
 
       setCount('');

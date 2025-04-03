@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { AnchorProvider } from '@coral-xyz/anchor';
-import { getProgram, getProgramStatePda } from '../utils/program';
+import { AnchorProvider, web3 } from '@coral-xyz/anchor';
+import { getProgram, getProgramStatePda, getTrackerPda, getTrackerRegistryPda } from '../utils/program';
 
 // Add type declaration for window.solana
 declare global {
@@ -31,15 +31,20 @@ export default function AdminPage() {
         preflightCommitment: 'confirmed'
       });
       const program = getProgram(provider);
-      const programState = getProgramStatePda();
+      const trackerPda = getTrackerPda(title);
+      const trackerRegistryPda = getTrackerRegistryPda();
 
+     
       await program.methods
-        .createTracker(title, description)
-        .accounts({
-          programState,
-          authority: provider.wallet.publicKey,
-        })
-        .rpc();
+      .createTracker(title, description)
+      .accounts({
+        tracker: trackerPda,
+        trackerRegistry: trackerRegistryPda,
+        user: provider.wallet.publicKey,
+        systemProgram: web3.SystemProgram.programId,
+      } as any)
+      .rpc();
+
 
       setTitle('');
       setDescription('');
