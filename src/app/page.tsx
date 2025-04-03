@@ -7,6 +7,8 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
 import { getProgram, getProgramStatePda, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerRegistryPda, PROGRAM_ID, getTrackerStreakPda, getNormalizedCurrentDate, getTrackerStatsListPda } from './utils/program';
 import { PublicKey } from '@solana/web3.js';
+import TrackerStatsGraph from './components/TrackerStatsGraph';
+import TrackerStreakGraph from './components/TrackerStreakGraph';
 
 // Add type declaration for window.solana
 declare global {
@@ -26,6 +28,17 @@ interface TrackerStats {
   uniqueUsers: number;
 }
 
+interface TrackerStat {
+  date: number;
+  totalCount: number;
+  uniqueUsers: number;
+}
+
+interface TrackerData {
+  date: number;
+  count: number;
+}
+
 export default function HomePage() {
   const { publicKey, connected } = useWallet();
   const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
@@ -38,6 +51,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<TrackerStats | null>(null);
   const [streak, setStreak] = useState<number>(0);
+  const [trackerStatsList, setTrackerStatsList] = useState<TrackerStat[]>([]);
+  const [trackerList, setTrackerList] = useState<TrackerData[]>([]);
 
   useEffect(() => {
     if (connected) {
@@ -57,6 +72,7 @@ export default function HomePage() {
       fetchStats();
       fetchStreak();
       fetchTrackerStatusList();
+      fetchTrackerList();
     }
   }, [connected, trackerId]);
 
@@ -151,17 +167,8 @@ export default function HomePage() {
       });
       const program = getProgram(provider);
     
-      const trackingDataPda = getTrackingDataPda(provider, trackerId);
       const trackerStreakPda = getTrackerStreakPda(provider, trackerId);
 
-      const tracks = await program.methods
-      .getUserTrackingData(trackerId)
-      .accounts({
-        trackingData: trackingDataPda,
-        user: provider.wallet.publicKey,
-      })
-      .view();
-      console.log("tracks", tracks);
       const streak = await program.methods
       .getUserStreak(trackerId)
       .accounts({
@@ -173,6 +180,40 @@ export default function HomePage() {
 
       console.log("streak", streak);
       setStreak(Number(streak.streak));
+    } catch (error) {
+      console.error('Error fetching streak:', error);
+    }
+  };
+
+  const fetchTrackerList = async () => {
+    if (!publicKey || selectedTracker === null || trackerId === null) return;
+
+    try {
+      const provider = new AnchorProvider(connection, window.solana, {
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed'
+      });
+      const program = getProgram(provider);
+      const trackingDataPda = getTrackingDataPda(provider, trackerId);
+
+      const tracks = await program.methods
+      .getUserTrackingData(trackerId)
+      .accounts({
+        trackingData: trackingDataPda,
+        user: provider.wallet.publicKey,
+      })
+      .view();
+      
+      const formattedTracks = tracks.map((track: any) => ({
+        date: track.date.toNumber(),
+        count: track.count,
+      }));
+      
+      setTrackerList(formattedTracks);
+      console.log("tracks", tracks);
+      for (const track of tracks) {
+        console.log("track date, count", track.date.toNumber(), track.count);
+      }
     } catch (error) {
       console.error('Error fetching streak:', error);
     }
@@ -196,10 +237,13 @@ export default function HomePage() {
       })
       .view();
 
+      const formattedStats = stats.map((stat: any) => ({
+        date: stat.date.toNumber(),
+        totalCount: stat.totalCount,
+        uniqueUsers: stat.uniqueUsers
+      }));
 
-      for (const stat of stats) {
-        console.log("stat date, totalCount, uniqueUsers", stat.date.toNumber(), stat.totalCount, stat.uniqueUsers);
-      }
+      setTrackerStatsList(formattedStats);
       
     } catch (error) {
       console.error('Error fetching streak:', error);
@@ -242,6 +286,7 @@ export default function HomePage() {
       fetchStats();
       fetchStreak();
       fetchTrackerStatusList();
+      fetchTrackerList();
     } catch (error) {
       console.error('Error adding tracking data:', error);
     } finally {
@@ -313,6 +358,20 @@ export default function HomePage() {
       ) : (
         <div className="text-center">
           <p className="text-xl">Please connect your wallet to view and add tracking data.</p>
+        </div>
+      )}
+
+      {connected && selectedTracker !== null && trackerList.length > 0 && (
+        <div className="mt-8 bg-white shadow-md rounded px-8 pt-6 pb-8">
+          <h2 className="text-xl font-bold mb-4">No-Smoking Streak & Track Status</h2>
+          <TrackerStreakGraph trackerList={trackerList} trackerStatsList={trackerStatsList} />
+        </div>
+      )}
+
+      {connected && selectedTracker !== null && trackerStatsList.length > 0 && (
+        <div className="mt-8 bg-white shadow-md rounded px-8 pt-6 pb-8">
+          <h2 className="text-xl font-bold mb-4">Success Rate Over Time</h2>
+          <TrackerStatsGraph stats={trackerStatsList} />
         </div>
       )}
     </div>
