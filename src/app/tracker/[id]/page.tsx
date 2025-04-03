@@ -246,17 +246,20 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
 
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 gap-2">
+      <div className="flex justify-between items-center mb-4 sm:mb-8 gap-2">
         <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => router.push('/')}
-            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1.5 sm:py-2 px-2.5 sm:px-4 rounded text-xs sm:text-base flex items-center"
           >
-            ← Back
+            <span className="mr-1">←</span>
+            <span>Back</span>
           </button>
-          <h1 className="text-2xl sm:text-3xl font-bold">{trackerTitle}</h1>
+          <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">{trackerTitle}</h1>
         </div>
-        <WalletMultiButton />
+        <div className="scale-[0.85] sm:scale-100 origin-right">
+          <WalletMultiButton />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">

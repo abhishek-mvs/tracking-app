@@ -20,9 +20,11 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
 
     // Calculate streak for each day
     let currentStreak = 0;
+    let maxStreak = 0;
     const streakData = sortedData.map((item) => {
       if (item.count === 1) {
         currentStreak++;
+        maxStreak = Math.max(maxStreak, currentStreak);
       } else {
         currentStreak = 0;
       }
@@ -68,6 +70,7 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
             backgroundColor: 'rgba(99, 102, 241, 0.5)',
             yAxisID: 'y',
             order: 2,
+            barThickness: 20,
           },
           {
             label: 'Community Success Rate %',
@@ -86,11 +89,18 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         interaction: {
           mode: 'index',
           intersect: false,
         },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -98,8 +108,18 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
             title: {
               display: true,
               text: 'User Streak (Days)',
+              font: {
+                size: 12
+              }
             },
             min: 0,
+            max: maxStreak + 1,
+            ticks: {
+              stepSize: 1,
+              font: {
+                size: 11
+              }
+            }
           },
           y1: {
             type: 'linear',
@@ -108,6 +128,9 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
             title: {
               display: true,
               text: 'Community Success Rate %',
+              font: {
+                size: 12
+              }
             },
             min: 0,
             max: 100,
@@ -117,11 +140,23 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
             ticks: {
               callback: function(value) {
                 return value + '%';
+              },
+              stepSize: 20,
+              font: {
+                size: 11
               }
             }
           },
         },
         plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              font: {
+                size: 12
+              }
+            }
+          },
           tooltip: {
             callbacks: {
               label: function(context) {
@@ -146,7 +181,7 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
   }, [trackerList, trackerStatsList]);
 
   return (
-    <div className="w-full h-[400px]">
+    <div className="w-full h-[300px] sm:h-[400px]">
       <canvas ref={chartRef}></canvas>
     </div>
   );
