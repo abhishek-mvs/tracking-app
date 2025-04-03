@@ -87,5 +87,5 @@ export const getTrackerStatsListPda = (trackerId: number) => {
 export const getNormalizedCurrentDate = () => {
     const currentDate = Math.floor(Date.now() / 1000);
     const oneDay = 86400;
-    return Math.floor(currentDate / oneDay) * oneDay - 0 * oneDay;
+    return Math.floor(currentDate / oneDay) * oneDay + 1 * oneDay;
 };

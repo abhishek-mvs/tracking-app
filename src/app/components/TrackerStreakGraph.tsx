@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
+import { format } from 'date-fns';
 
 interface TrackerStreakGraphProps {
   trackerList: { date: number; count: number }[];
@@ -15,6 +16,7 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
 
     // Sort data by date
     const sortedData = [...trackerList].sort((a, b) => a.date - b.date);
+    const sortedStatsData = [...trackerStatsList].sort((a, b) => a.date - b.date);
 
     // Calculate streak for each day
     let currentStreak = 0;
@@ -25,18 +27,16 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
         currentStreak = 0;
       }
       return {
-        date: new Date(item.date * 1000).toLocaleDateString(),
+        date: format(new Date(item.date * 1000), 'MMM dd, yyyy'),
         streak: currentStreak,
       };
     });
 
-    // Calculate track status percentage
-    const trackStatusData = sortedData.map((item, index) => {
-      const successfulDays = sortedData.slice(0, index + 1).filter(d => d.count === 1).length;
-      const totalDays = index + 1;
+    // Calculate community success rate from trackerStatsList
+    const communitySuccessData = sortedStatsData.map((item) => {
       return {
-        date: new Date(item.date * 1000).toLocaleDateString(),
-        percentage: (successfulDays / totalDays) * 100,
+        date: format(new Date(item.date * 1000), 'MMM dd, yyyy'),
+        percentage: item.uniqueUsers > 0 ? (item.totalCount / item.uniqueUsers) * 100 : 0,
       };
     });
 
@@ -60,12 +60,15 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
             order: 2,
           },
           {
-            label: 'Track Status %',
-            data: trackStatusData.map(d => d.percentage),
+            label: 'Community Success Rate %',
+            data: communitySuccessData.map(d => d.percentage),
             borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
             type: 'line',
             yAxisID: 'y1',
             order: 1,
+            fill: true,
+            tension: 0.1,
           },
         ],
       },
@@ -92,15 +95,34 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
             position: 'right',
             title: {
               display: true,
-              text: 'Track Status %',
+              text: 'Community Success Rate %',
             },
             min: 0,
             max: 100,
             grid: {
               drawOnChartArea: false,
             },
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            }
           },
         },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y;
+                if (label.includes('Success Rate')) {
+                  return `${label}: ${value.toFixed(1)}%`;
+                }
+                return `${label}: ${value} days`;
+              }
+            }
+          }
+        }
       },
     });
 
