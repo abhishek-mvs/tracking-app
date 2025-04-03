@@ -25,6 +25,13 @@ interface TrackerData {
   count: number;
 }
 
+interface StreakData {
+  streak: number;
+  longestStreak: number;
+  lastStreakDate: number;
+  longestStreakDate: number;
+}
+
 export default function TrackerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { publicKey, connected } = useWallet();
@@ -34,7 +41,7 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
   const [count, setCount] = useState('');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<TrackerStats | null>(null);
-  const [streak, setStreak] = useState<number>(0);
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
   const [trackerStatsList, setTrackerStatsList] = useState<TrackerStat[]>([]);
   const [trackerList, setTrackerList] = useState<TrackerData[]>([]);
   const [trackerId, setTrackerId] = useState<any | null>(null);
@@ -96,7 +103,7 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
         tracker: trackerPda,
       } as any)
       .view();
-
+      console.log("stats", stats);
       setStats(stats as TrackerStats);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -123,7 +130,12 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
       })
       .view();
 
-      setStreak(Number(streak.streak));
+      setStreakData({
+        streak: Number(streak.streak),
+        longestStreak: Number(streak.longestStreak),
+        lastStreakDate: Number(streak.lastStreakDate),
+        longestStreakDate: Number(streak.longestStreakDate)
+      });
     } catch (error) {
       console.error('Error fetching streak:', error);
     }
@@ -233,37 +245,47 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 gap-2">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => router.push('/')}
-            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
           >
             ← Back
           </button>
-          <h1 className="text-3xl font-bold">{trackerTitle}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{trackerTitle}</h1>
         </div>
         <WalletMultiButton />
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        <div className="bg-white shadow-md rounded px-8 pt-6 pb-8">
-          <h2 className="text-xl font-bold mb-4">Tracker Stats</h2>
-          {stats && (
-            <div className="mb-4">
-              <div className="text-lg">Total Count: {stats.totalCount}</div>
-              <div className="text-lg">Unique Users: {stats.uniqueUsers}</div>
-              <div className="text-lg">Your Streak: {streak} days</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+        {/* Left Block - Personal Streak Details */}
+        <div className="bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
+          <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Your Streak Details</h2>
+          {streakData && (
+            <div className="space-y-3">
+              <div className="text-base sm:text-lg">
+                <span className="font-semibold">Current Streak:</span> {streakData.streak} days
+              </div>
+              <div className="text-base sm:text-lg">
+                <span className="font-semibold">Longest Streak:</span> {streakData.longestStreak} days
+              </div>
+              <div className="text-base sm:text-lg">
+                <span className="font-semibold">Last Streak Date:</span> {new Date(streakData.lastStreakDate * 1000).toLocaleDateString()}
+              </div>
+              <div className="text-base sm:text-lg">
+                <span className="font-semibold">Longest Streak Date:</span> {new Date(streakData.longestStreakDate * 1000).toLocaleDateString()}
+              </div>
             </div>
           )}
           <div className="mt-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Did you maintain your streak today?
             </label>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <button
-                className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline"
+                className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded focus:outline-none focus:shadow-outline text-sm sm:text-base"
                 onClick={() => {
                   setCount('1');
                   handleAddData();
@@ -273,7 +295,7 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
                 {loading ? 'Adding...' : 'Hurray! 🎉'}
               </button>
               <button
-                className="flex-1 bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline"
+                className="flex-1 bg-red-500 hover:bg-red-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded focus:outline-none focus:shadow-outline text-sm sm:text-base"
                 onClick={() => {
                   setCount('0');
                   handleAddData();
@@ -286,9 +308,27 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
 
+        {/* Right Block - Community Stats */}
+        <div className="bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
+          <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Community Stats</h2>
+          {stats && (
+            <div className="space-y-3">
+              <div className="text-base sm:text-lg">
+                <span className="font-semibold">Total Users Today:</span> {stats.uniqueUsers}
+              </div>
+              <div className="text-base sm:text-lg">
+                <span className="font-semibold">Total Check-ins Today:</span> {stats.totalCount}
+              </div>
+              <div className="text-base sm:text-lg">
+                <span className="font-semibold">Success Rate:</span> {((stats.totalCount / stats.uniqueUsers) * 100).toFixed(1)}%
+              </div>
+            </div>
+          )}
+        </div>
+
         {trackerList.length > 0 && (
-          <div className="bg-white shadow-md rounded px-8 pt-6 pb-8">
-            <h2 className="text-xl font-bold mb-4">No-Smoking Streak & Track Status</h2>
+          <div className="col-span-1 sm:col-span-2 bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
+            <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4">No-Smoking Streak & Track Status</h2>
             <TrackerStreakGraph trackerList={trackerList} trackerStatsList={trackerStatsList} />
           </div>
         )}

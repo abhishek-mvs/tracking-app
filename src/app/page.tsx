@@ -83,27 +83,27 @@ export default function HomePage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Tracking Dashboard</h1>
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold">Tracking Dashboard</h1>
         <WalletMultiButton />
       </div>
 
       {connected ? (
-        <div className="grid grid-cols-1 gap-8">
-          <div className="bg-white shadow-md rounded px-8 pt-6 pb-8">
-            <h2 className="text-xl font-bold mb-4">Select Tracker</h2>
+        <div className="grid grid-cols-1 gap-4 sm:gap-8">
+          <div className="bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
+            <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Select Tracker</h2>
             {loading ? (
-              <div className="text-center py-4">Loading trackers...</div>
+              <div className="text-center py-2 sm:py-4">Loading trackers...</div>
             ) : (
               <div className="space-y-2">
                 {trackers.map((tracker) => (
                   <button
                     key={tracker}
-                    className="w-full text-left p-3 rounded bg-gray-100 hover:bg-gray-200"
+                    className="w-full text-left p-2 sm:p-3 rounded bg-gray-100 hover:bg-gray-200"
                     onClick={() => handleTrackerSelect(tracker)}
                   >
-                    <div className="font-semibold">{tracker}</div>
+                    <div className="font-semibold text-sm sm:text-base">{tracker}</div>
                   </button>
                 ))}
               </div>
@@ -112,7 +112,7 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="text-center">
-          <p className="text-xl">Please connect your wallet to view and add tracking data.</p>
+          <p className="text-base sm:text-xl">Please connect your wallet to view and add tracking data.</p>
         </div>
       )}
     </div>
