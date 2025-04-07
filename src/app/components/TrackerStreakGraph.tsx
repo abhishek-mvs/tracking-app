@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
-import { format } from 'date-fns';
+import { format, addDays, differenceInDays, parseISO } from 'date-fns';
 
 interface TrackerStreakGraphProps {
   trackerList: { date: number; count: number }[];
@@ -17,30 +17,76 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
     const sortedData = [...trackerList].sort((a, b) => a.date - b.date);
     const sortedStatsData = [...trackerStatsList].sort((a, b) => a.date - b.date);
 
+    // Fill in missing dates
+    const filledData = [];
     let currentStreak = 0;
-    const streakData = sortedData.map((item) => {
-      if (item.count === 1) {
-        currentStreak++;
-      } else {
-        currentStreak = 0;
+    
+    if (sortedData.length > 0) {
+      const startDate = new Date(sortedData[0].date * 1000);
+      const endDate = new Date(sortedData[sortedData.length - 1].date * 1000);
+      const totalDays = differenceInDays(endDate, startDate) + 1;
+      
+      const dateMap = new Map(
+        sortedData.map(item => [
+          format(new Date(item.date * 1000), 'yyyy-MM-dd'),
+          item
+        ])
+      );
+      
+      for (let i = 0; i < totalDays; i++) {
+        const currentDate = addDays(startDate, i);
+        const dateKey = format(currentDate, 'yyyy-MM-dd');
+        const unixTimestamp = Math.floor(currentDate.getTime() / 1000);
+        
+        if (dateMap.has(dateKey)) {
+          // Use existing data
+          const item = dateMap.get(dateKey)!;
+          
+          if (item.count === 1) {
+            currentStreak++;
+          } else {
+            currentStreak = 0;
+          }
+          
+          filledData.push({
+            date: unixTimestamp,
+            count: item.count,
+            streak: currentStreak,
+            formattedDate: format(currentDate, 'MMM dd')
+          });
+        } else {
+          // Add missing date with default values
+          currentStreak = 0; // Reset streak for missing dates
+          filledData.push({
+            date: unixTimestamp,
+            count: 0,
+            streak: 0,
+            formattedDate: format(currentDate, 'MMM dd')
+          });
+        }
       }
-      return {
-        date: format(new Date(item.date * 1000), 'MMM dd'),
-        streak: currentStreak,
-      };
+    }
+
+    // Create a map for community stats with date as key
+    const statsMap = new Map();
+    sortedStatsData.forEach(item => {
+      const dateKey = format(new Date(item.date * 1000), 'yyyy-MM-dd');
+      statsMap.set(dateKey, {
+        uniqueUsers: item.uniqueUsers,
+        totalCount: item.totalCount,
+        successRate: item.uniqueUsers > 0 ? Number((item.totalCount / item.uniqueUsers * 100).toFixed(2)) : 0
+      });
     });
 
-    const statsMap = new Map(
-      sortedStatsData.map(item => [
-        format(new Date(item.date * 1000), 'MMM dd'),
-        item.uniqueUsers > 0 ? Number((item.totalCount / item.uniqueUsers * 100).toFixed(2)) : 0
-      ])
-    );
-
-    const communitySuccessData = streakData.map(streakItem => ({
-      date: streakItem.date,
-      percentage: statsMap.get(streakItem.date) || 0
-    }));
+    // Add community success data to filled data
+    const communitySuccessData = filledData.map(item => {
+      const dateKey = format(new Date(item.date * 1000), 'yyyy-MM-dd');
+      const stats = statsMap.get(dateKey);
+      return {
+        date: item.formattedDate,
+        percentage: stats ? stats.successRate : 0
+      };
+    });
 
     if (chartInstance.current) {
       chartInstance.current.destroy();
@@ -52,11 +98,11 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
     chartInstance.current = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: streakData.map(d => d.date),
+        labels: filledData.map(d => d.formattedDate),
         datasets: [
           {
             label: 'User Streak',
-            data: streakData.map(d => d.streak),
+            data: filledData.map(d => d.streak),
             backgroundColor: 'rgba(99, 102, 241, 0.7)',
             yAxisID: 'y',
             order: 2,

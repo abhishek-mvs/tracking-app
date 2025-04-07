@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import TrackerStreakGraph from '../../components/TrackerStreakGraph';
 import { PublicKey } from '@solana/web3.js';
 import DailyTrackingStatus from '@/app/components/DailyTrackingStatus';
+import { createV1, TokenStandard } from '@metaplex-foundation/mpl-token-metadata';
 import { toast } from 'react-toastify';
 
 interface TrackerStats {
@@ -166,7 +167,7 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
         date: track.date.toNumber(),
         count: track.count,
       }));
-      
+      console.log("formattedTracks", formattedTracks);
       setTrackerList(formattedTracks);
     } catch (error) {
       console.error('Error fetching tracker list:', error);
