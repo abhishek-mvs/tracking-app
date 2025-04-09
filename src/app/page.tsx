@@ -5,8 +5,9 @@ import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
-import { getProgram, getProgramStatePda, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerRegistryPda, PROGRAM_ID, getTrackerStreakPda, getNormalizedCurrentDate, getTrackerStatsListPda } from './utils/program';
+import { getProgram, getProgramStatePda, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerRegistryPda, PROGRAM_ID, getTrackerStreakPda, getNormalizedCurrentDate, getTrackerStatsListPda } from '../utils/program';
 import { useRouter } from 'next/navigation';
+import { fetchTrackers } from '../lib/tracker';
 
 // Add type declaration for window.solana
 declare global {
@@ -47,29 +48,16 @@ export default function HomePage() {
 
   useEffect(() => {
     if (connected) {
-      fetchTrackers();
+      fetchTrackersList();
     }
   }, [connected]);
 
-  const fetchTrackers = async () => {
+  const fetchTrackersList = async () => {
     if (!publicKey) return;
 
     try {
       setLoading(true);
-      const provider = new AnchorProvider(connection, window.solana, {
-        commitment: 'confirmed',
-        preflightCommitment: 'confirmed'
-      });
-      const program = getProgram(provider);
-      
-      const trackerRegistry = getTrackerRegistryPda();
-      const trackerNames = await program.methods
-      .getAllTrackers()
-      .accounts({
-        trackerRegistry: trackerRegistry,
-      })
-      .view();
-      
+      const trackerNames = await fetchTrackers(connection);
       setTrackers(trackerNames);
     } catch (error) {
       console.error('Error fetching trackers:', error);

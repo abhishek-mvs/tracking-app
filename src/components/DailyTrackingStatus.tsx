@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { getNormalizedCurrentDate } from '../utils/program';
+import { mintNft } from '@/lib/mintNft';
 
 interface DailyTrackingStatusProps {
   trackerList: { date: number; count: number }[];

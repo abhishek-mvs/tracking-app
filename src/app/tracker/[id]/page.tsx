@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
-import { getProgram, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerStreakPda, getNormalizedCurrentDate, getTrackerStatsListPda } from '../../utils/program';
+import { getProgram, getTrackingDataPda, getTrackerStatsPda, getTrackerPda, getTrackerStreakPda, getNormalizedCurrentDate, getTrackerStatsListPda } from '../../../utils/program';
 import { useRouter } from 'next/navigation';
-import TrackerStreakGraph from '../../components/TrackerStreakGraph';
+import TrackerStreakGraph from '../../../components/TrackerStreakGraph';
 import { PublicKey } from '@solana/web3.js';
-import DailyTrackingStatus from '@/app/components/DailyTrackingStatus';
+import DailyTrackingStatus from '../../../components/DailyTrackingStatus';
 import { createV1, TokenStandard } from '@metaplex-foundation/mpl-token-metadata';
 import { toast } from 'react-toastify';
+import { fetchTracker, fetchStats, fetchStreak, fetchTrackerList, fetchTrackerStatusList } from '../../../lib/tracker';
 
 interface TrackerStats {
   totalCount: number;
@@ -55,15 +56,13 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
       return;
     }
 
-    const fetchTracker = async () => {
+    const fetchTrackerData = async () => {
       try {
-        const provider = new AnchorProvider(connection, window.solana, {
-          commitment: 'confirmed',
-          preflightCommitment: 'confirmed'
-        });
-        const program = getProgram(provider);
-        const trackerPda = getTrackerPda(trackerTitle);
-        const tracker = await program.account.tracker.fetch(trackerPda);
+        const tracker = await fetchTracker(connection, trackerTitle);
+        if (!tracker) {
+          router.push('/');
+          return;
+        }
         setTrackerId(tracker.id);
       } catch (error) {
         console.error('Error fetching tracker:', error);
@@ -71,68 +70,34 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
       }
     };
 
-    fetchTracker();
+    fetchTrackerData();
   }, [connected, params.id]);
 
   useEffect(() => {
     if (connected && trackerId !== null) {
-      fetchStats();
-      fetchStreak();
-      fetchTrackerStatusList();
-      fetchTrackerList();
+      fetchStatsData();
+      fetchStreakData();
+      fetchTrackerStatusListData();
+      fetchTrackerListData();
     }
   }, [connected, trackerId]);
 
-  const fetchStats = async () => {
+  const fetchStatsData = async () => {
     if (!publicKey || trackerId === null) return;
 
     try {
-      const provider = new AnchorProvider(connection, window.solana, {
-        commitment: 'confirmed',
-        preflightCommitment: 'confirmed'
-      });
-      const program = getProgram(provider);
-      
-      const normalizedCurrentDate = getNormalizedCurrentDate();
-      const trackerPda = getTrackerPda(trackerTitle);
-      const trackerStatsPda = getTrackerStatsPda(trackerId, normalizedCurrentDate);
-
-      console.log("trackerStatsPda", trackerStatsPda.toBase58());
-      const stats = await program.methods
-      .getTrackerStats(trackerId, new BN(normalizedCurrentDate))
-      // @ts-ignore - Account structure is correct but TypeScript types are mismatched
-      .accounts({
-        trackerStats: trackerStatsPda,
-        tracker: trackerPda,
-      } as any)
-      .view();
-      console.log("stats", stats);
+      const stats = await fetchStats(connection, trackerId, trackerTitle);
       setStats(stats as TrackerStats);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
   };
 
-  const fetchStreak = async () => {
+  const fetchStreakData = async () => {
     if (!publicKey || trackerId === null) return;
 
     try {
-      const provider = new AnchorProvider(connection, window.solana, {
-        commitment: 'confirmed',
-        preflightCommitment: 'confirmed'
-      });
-      const program = getProgram(provider);
-    
-      const trackerStreakPda = getTrackerStreakPda(provider, trackerId);
-
-      const streak = await program.methods
-      .getUserStreak(trackerId)
-      .accounts({
-        trackerStreak: trackerStreakPda,
-        user: provider.wallet.publicKey,
-      })
-      .view();
-
+      const streak = await fetchStreak(connection, trackerId);
       setStreakData({
         streak: Number(streak.streak),
         longestStreak: Number(streak.longestStreak),
@@ -144,106 +109,25 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  const fetchTrackerList = async () => {
+  const fetchTrackerListData = async () => {
     if (!publicKey || trackerId === null) return;
 
     try {
-      const provider = new AnchorProvider(connection, window.solana, {
-        commitment: 'confirmed',
-        preflightCommitment: 'confirmed'
-      });
-      const program = getProgram(provider);
-      const trackingDataPda = getTrackingDataPda(provider, trackerId);
-
-      const tracks = await program.methods
-      .getUserTrackingData(trackerId)
-      .accounts({
-        trackingData: trackingDataPda,
-        user: provider.wallet.publicKey,
-      })
-      .view();
-      
-      const formattedTracks = tracks.map((track: any) => ({
-        date: track.date.toNumber(),
-        count: track.count,
-      }));
-      console.log("formattedTracks", formattedTracks);
-      setTrackerList(formattedTracks);
+      const tracks = await fetchTrackerList(connection, trackerId);
+      setTrackerList(tracks);
     } catch (error) {
       console.error('Error fetching tracker list:', error);
     }
   };
 
-  const fetchTrackerStatusList = async () => {
+  const fetchTrackerStatusListData = async () => {
     if (!publicKey || trackerId === null) return;
 
     try {
-      const provider = new AnchorProvider(connection, window.solana, {
-        commitment: 'confirmed',
-        preflightCommitment: 'confirmed'
-      });
-      const program = getProgram(provider);
-    
-      const trackerStatsListPda = getTrackerStatsListPda(trackerId);
-      const stats = await program.methods
-      .getAllTrackerStats(trackerId)
-      .accounts({
-        trackerStatsList: trackerStatsListPda,
-      })
-      .view();
-      
-      const formattedStats = stats.map((stat: any) => ({
-        date: stat.date.toNumber(),
-        totalCount: stat.totalCount,
-        uniqueUsers: stat.uniqueUsers
-      }));
-      console.log("formattedStats", formattedStats);
-      setTrackerStatsList(formattedStats);
+      const stats = await fetchTrackerStatusList(connection, trackerId);
+      setTrackerStatsList(stats);
     } catch (error) {
       console.error('Error fetching tracker status list:', error);
-    }
-  };
-
-  const handleAddData = async () => {
-    if (!publicKey || trackerId === null || !count) return;
-
-    try {
-      setLoading(true);
-      const provider = new AnchorProvider(connection, window.solana, {
-        commitment: 'confirmed',
-        preflightCommitment: 'confirmed'
-      });
-      const program = getProgram(provider);
-      const trackerPda = getTrackerPda(trackerTitle);
-      const trackingData = getTrackingDataPda(provider, trackerId);
-      
-      const normalizedCurrentDate = getNormalizedCurrentDate();
-      const trackingStatsPda = getTrackerStatsPda(trackerId, normalizedCurrentDate);
-      const trackerStreakPda = getTrackerStreakPda(provider, trackerId);
-      const trackerStatsListPda = getTrackerStatsListPda(trackerId);
-
-      await program.methods
-      .addTrackingData(trackerId, parseInt(count), new BN(normalizedCurrentDate))
-      .accounts({
-        trackingData: trackingData,
-        tracker: trackerPda,
-        user: provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-        trackerStats: trackingStatsPda,
-        trackerStreak: trackerStreakPda,
-        trackerStatsList: trackerStatsListPda,
-      } as any)
-      .rpc();
-
-      setCount('');
-      fetchStats();
-      fetchStreak();
-      fetchTrackerStatusList();
-      fetchTrackerList();
-    } catch (error) {
-      console.error('Error adding tracking data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -278,10 +162,10 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
 
       // Refresh all the data after tracking
       await Promise.all([
-        fetchTrackerList(),
-        fetchStats(),
-        fetchStreak(),
-        fetchTrackerStatusList()
+        fetchTrackerListData(),
+        fetchStatsData(),
+        fetchStreakData(),
+        fetchTrackerStatusListData()
       ]);
       
       toast.success('Successfully tracked your status!');

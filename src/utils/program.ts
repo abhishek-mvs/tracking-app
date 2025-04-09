@@ -1,8 +1,8 @@
 import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
 import { Program } from "@coral-xyz/anchor";
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
-import { TrackingSystem } from '../../../idl';
-import tracking_system from '../../../tracking_system.json' assert { type: 'json' };
+import { TrackingSystem } from '../../idl';
+import tracking_system from '../../tracking_system.json' assert { type: 'json' };
 import { program } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 export const PROGRAM_ID = new PublicKey('FfjNyygvYw56Qaq1MUj34U3nMb3uVb5NjCUjjRzMashR');

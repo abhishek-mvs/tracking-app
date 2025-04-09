@@ -5,7 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { AnchorProvider, web3 } from '@coral-xyz/anchor';
-import { getProgram, getProgramStatePda, getTrackerPda, getTrackerRegistryPda } from '../utils/program';
+import { getProgram, getProgramStatePda, getTrackerPda, getTrackerRegistryPda } from '../../utils/program';
 
 // Add type declaration for window.solana
 declare global {

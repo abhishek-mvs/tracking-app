@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { SolanaWalletProvider } from "./components/WalletProvider";
+import { SolanaWalletProvider } from "../components/WalletProvider";
 import Link from "next/link";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <SolanaWalletProvider>
+          <Toaster position="top-right" />
           <nav className="bg-white shadow-sm">
             <div className="container mx-auto px-4">
               <div className="flex justify-between items-center h-16">
