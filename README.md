@@ -1,24 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Solana Tracking App
+
+A Next.js application for tracking and managing Solana blockchain transactions and assets. This app provides a user-friendly interface for monitoring Solana activities and managing digital assets.
+
+## Features
+
+- Real-time transaction tracking
+- Asset management
+- Interactive charts and analytics
+- Wallet integration
+- Token metadata management
+
+## Tech Stack
+
+- Next.js 14
+- TypeScript
+- Solana Web3.js
+- Anchor Framework
+- Metaplex
+- TailwindCSS
+- Chart.js
+
+## Prerequisites
+
+- Node.js (v18 or later)
+- npm or yarn
+- Solana CLI tools
+- A Solana wallet (e.g., Phantom)
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
+```bash
+git clone [your-repo-url]
+cd tracking-app
+```
 
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Set up environment variables:
+Create a `.env` file in the root directory with the following variables:
+```
+NEXT_PUBLIC_SOLANA_RPC_URL=your_rpc_url
+```
+
+4. Run the development server:
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm test` - Run tests
+
+## Project Structure
+
+- `src/` - Source code
+- `public/` - Static assets
+- `lib.rs` - Solana program code
+- `idl.ts` - Anchor IDL definitions
+- `tracking_system.json` - Program configuration
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Learn More
 
