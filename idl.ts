@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/tracking_system.json`.
  */
 export type TrackingSystem = {
-  "address": "FfjNyygvYw56Qaq1MUj34U3nMb3uVb5NjCUjjRzMashR",
+  "address": "breYL3d7BG41NsLsqxmB6mRAL27Po7C12eZxAk8peY3",
   "metadata": {
     "name": "trackingSystem",
     "version": "0.1.0",

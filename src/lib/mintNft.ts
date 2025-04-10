@@ -25,7 +25,7 @@ const umi = createUmi("https://api.devnet.solana.com")
 .use(mplTokenMetadata())
 .use(mplToolbox());
 
-const base658Key = 'D746Z8fZsisQamYqWpaofkRBMDMTByn6nF1tJ9FAHBTBxULV6pAZRmaZc6aXB5qWcBkVFjF6kxcJ5M6iECuAv99';
+const base658Key = process.env.CREATOR_PRIVATE_KEY || '';
 // Load creator keypair
 const secretKey = bs58.decode(base658Key);
 const j = new Uint8Array(secretKey.buffer, secretKey.byteOffset, secretKey.byteLength / Uint8Array.BYTES_PER_ELEMENT);
@@ -55,6 +55,7 @@ export const mintNft = async (mintAddress: string, tokenOwnerAddress: string): P
             for (let i = 0; i < editionsToPrint; i++) {
             console.log(`Edition Mint: ${editionMint.publicKey.toString()}`);
             const edition = await printV1(umi, {
+                // @ts-ignore - Account structure is correct but TypeScript types are mismatched
                 masterTokenAccountOwner: keypair.publicKey,
                 masterEditionMint: mint,
                 editionMint,

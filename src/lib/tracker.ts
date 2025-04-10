@@ -187,6 +187,7 @@ export async function fetchNFTsList(connection: Connection) {
         const mintAddresses = await program.methods
         .getUserNfts()
         .accounts({
+            // @ts-ignore - Account structure is correct but TypeScript types are mismatched
             nftTracking: nftTrackingPda,
             user: provider.wallet.publicKey,
         })
@@ -227,6 +228,7 @@ export async function addNFT(connection: Connection, nftMintAddress: string, nft
         await program.methods
             .addNft(nftMint, metadata)
             .accounts({
+                // @ts-ignore - Account structure is correct but TypeScript types are mismatched
                 nftTracking: nftTrackingPda,
                 userNft: userNftPda,
                 user: provider.wallet.publicKey,

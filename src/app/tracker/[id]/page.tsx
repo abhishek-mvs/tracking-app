@@ -39,8 +39,8 @@ interface StreakData {
 export default function TrackerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { publicKey, connected } = useWallet();
-  const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
-  // const { connection } = useConnection();
+  // const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+  const { connection } = useConnection();
   const trackerTitle = decodeURIComponent(params.id);
   const [count, setCount] = useState('');
   const [loading, setLoading] = useState(false);

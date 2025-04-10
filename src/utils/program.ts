@@ -5,7 +5,7 @@ import { TrackingSystem } from '../../idl';
 import tracking_system from '../../tracking_system.json' assert { type: 'json' };
 import { program } from '@coral-xyz/anchor/dist/cjs/native/system';
 
-export const PROGRAM_ID = new PublicKey('FfjNyygvYw56Qaq1MUj34U3nMb3uVb5NjCUjjRzMashR');
+export const PROGRAM_ID = new PublicKey('breYL3d7BG41NsLsqxmB6mRAL27Po7C12eZxAk8peY3');
 
 export const getProgram = (provider: AnchorProvider) => {    
   return new Program<TrackingSystem>(tracking_system, provider);

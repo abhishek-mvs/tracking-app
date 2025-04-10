@@ -19,8 +19,8 @@ declare global {
 export default function HomePage() {
   const router = useRouter();
   const { publicKey, connected } = useWallet();
-  const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
-  // const { connection } = useConnection();
+  // const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+  const { connection } = useConnection();
   const [trackers, setTrackers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 

@@ -13,19 +13,19 @@ import { BN } from '@coral-xyz/anchor';
 const NFT_OPTIONS = [
   {
     days: 3,
-    mintAddress: 'CHtoyS3DykTcEi6jTgFP6hhJyG55AKwAUVzJLexafKxz',
+    mintAddress: 'FXcgEvSA9EP3wE1VztJb4Zf8n6fBZBuv9riswT18dn1d',
     title: '3-Day Streak NFT',
     description: 'Reward for maintaining a 3-day streak',
   },
   {
     days: 7,
-    mintAddress: 'AJvaQdmiKixog6JuXa4Hub6DnTb42ULSGTRAFootByLa',
+    mintAddress: 'HWTizpsNyqj9yNzS2YWVPZf4ZwYrpyqkuBkZ3Kwu2DPU',
     title: '7-Day Streak NFT',
     description: 'Reward for maintaining a 7-day streak',
   },
   {
     days: 30,
-    mintAddress: 'DvbZu2i1b9bpt4w37trV3wsdwBaYRyTRydWbH4d6goMz',
+    mintAddress: 'CMGWzhDsR8nC7oVNrF75RHF3JDMvDVCsaSC7NHi68aww',
     title: '30-Day Streak NFT',
     description: 'Reward for maintaining a 30-day streak',
   },
@@ -50,24 +50,11 @@ interface NFTMetadataItem {
   value: string;
 }
 
-interface UserNFT {
-  nftAddress: PublicKey;
-  receivedTime: BN;
-  metadata: NFTMetadataItem[];
-}
-
-interface NFTMetadata {
-  imageBuffer?: ArrayBuffer;
-  imageUri?: string;
-  jsonMetadata?: any;
-  blobUrl?: string;
-}
-
 export default function NFTPage() {
   const router = useRouter();
   const { publicKey, connected } = useWallet();
-  const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
-//   const { connection } = useConnection();
+//   const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+  const { connection } = useConnection();
   const [trackers, setTrackers] = useState<Tracker[]>([]);
   const [trackerStreaks, setTrackerStreaks] = useState<Record<number, number>>({});
   const [isLoading, setIsLoading] = useState(false);
