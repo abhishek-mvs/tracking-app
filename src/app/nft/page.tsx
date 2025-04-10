@@ -224,13 +224,13 @@ export default function NFTPage() {
             if (!nftMetadata) {
               console.log(`Retry ${6 - retries}: Metadata is null, retrying...`);
               if (retries > 1) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 5000));
               }
             }
           } catch (error) {
             console.log(`Retry ${6 - retries}: Error fetching metadata, retrying...`);
             if (retries > 1) {
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(resolve => setTimeout(resolve, 5000));
             }
           }
           retries--;
