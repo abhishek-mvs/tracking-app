@@ -14,6 +14,70 @@ export type TrackingSystem = {
   },
   "instructions": [
     {
+      "name": "addNft",
+      "discriminator": [
+        55,
+        57,
+        85,
+        145,
+        81,
+        134,
+        220,
+        223
+      ],
+      "accounts": [
+        {
+          "name": "nftTracking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  102,
+                  116,
+                  76,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nftAddress",
+          "type": "pubkey"
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "metadataEntry"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "addTrackingData",
       "discriminator": [
         245,
@@ -314,6 +378,55 @@ export type TrackingSystem = {
       }
     },
     {
+      "name": "getUserNfts",
+      "discriminator": [
+        132,
+        138,
+        149,
+        65,
+        96,
+        139,
+        5,
+        254
+      ],
+      "accounts": [
+        {
+          "name": "nftTracking",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  102,
+                  116,
+                  76,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user"
+        }
+      ],
+      "args": [],
+      "returns": {
+        "vec": {
+          "defined": {
+            "name": "nftInfo"
+          }
+        }
+      }
+    },
+    {
       "name": "getUserStreak",
       "discriminator": [
         57,
@@ -436,6 +549,19 @@ export type TrackingSystem = {
   ],
   "accounts": [
     {
+      "name": "nftTrackingData",
+      "discriminator": [
+        143,
+        55,
+        151,
+        183,
+        80,
+        121,
+        108,
+        139
+      ]
+    },
+    {
       "name": "tracker",
       "discriminator": [
         31,
@@ -527,6 +653,70 @@ export type TrackingSystem = {
     }
   ],
   "types": [
+    {
+      "name": "metadataEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "nftInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nftAddress",
+            "type": "pubkey"
+          },
+          {
+            "name": "receivedTime",
+            "type": "u64"
+          },
+          {
+            "name": "metadata",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "metadataEntry"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "nftTrackingData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "nfts",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "nftInfo"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "track",
       "type": {

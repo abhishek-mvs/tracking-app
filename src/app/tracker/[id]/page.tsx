@@ -39,8 +39,8 @@ interface StreakData {
 export default function TrackerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { publicKey, connected } = useWallet();
-  // const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
-  const { connection } = useConnection();
+  const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+  // const { connection } = useConnection();
   const trackerTitle = decodeURIComponent(params.id);
   const [count, setCount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -187,9 +187,6 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
             <span>Back</span>
           </button>
           <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">{trackerTitle}</h1>
-        </div>
-        <div className="scale-[0.85] sm:scale-100 origin-right">
-          <WalletMultiButton />
         </div>
       </div>
 

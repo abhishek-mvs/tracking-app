@@ -16,33 +16,11 @@ declare global {
   }
 }
 
-interface Tracker {
-  id: number;
-  title: string;
-  description: string;
-}
-
-interface TrackerStats {
-  totalCount: number;
-  uniqueUsers: number;
-}
-
-interface TrackerStat {
-  date: number;
-  totalCount: number;
-  uniqueUsers: number;
-}
-
-interface TrackerData {
-  date: number;
-  count: number;
-}
-
 export default function HomePage() {
   const router = useRouter();
   const { publicKey, connected } = useWallet();
-  // const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
-  const { connection } = useConnection();
+  const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
+  // const { connection } = useConnection();
   const [trackers, setTrackers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -70,13 +48,12 @@ export default function HomePage() {
     router.push(`/tracker/${tracker}`);
   };
 
+  const handleNFTSelect = () => {
+    router.push(`/nft`);
+  };
+
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 gap-2">
-        <h1 className="text-2xl sm:text-3xl font-bold">Tracking Dashboard</h1>
-        <WalletMultiButton />
-      </div>
-
       {connected ? (
         <div className="grid grid-cols-1 gap-4 sm:gap-8">
           <div className="bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
@@ -86,6 +63,7 @@ export default function HomePage() {
             ) : (
               <div className="space-y-2">
                 {trackers.map((tracker) => (
+                  <div className="space-y-2">
                   <button
                     key={tracker}
                     className="w-full text-left p-2 sm:p-3 rounded bg-gray-100 hover:bg-gray-200"
@@ -93,8 +71,10 @@ export default function HomePage() {
                   >
                     <div className="font-semibold text-sm sm:text-base">{tracker}</div>
                   </button>
+                  </div>
                 ))}
               </div>
+              
             )}
           </div>
         </div>

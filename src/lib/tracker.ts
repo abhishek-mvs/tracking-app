@@ -1,10 +1,24 @@
-import { getNormalizedCurrentDate, getTrackerPda, getTrackerRegistryPda, getTrackerStatsListPda, getTrackerStatsPda, getTrackerStreakPda, getTrackingDataPda } from "@/utils/program";
+import { getNFTTrackingPda, getNormalizedCurrentDate, getTrackerPda, getTrackerRegistryPda, getTrackerStatsListPda, getTrackerStatsPda, getTrackerStreakPda, getTrackingDataPda } from "@/utils/program";
 import { getProgram } from "@/utils/program";
 import { AnchorProvider, BN } from "@coral-xyz/anchor";
-import { Connection } from "@solana/web3.js";
+import { Connection, SystemProgram, PublicKey } from "@solana/web3.js";
+
+
+export async function fetchTrackersData(connection: Connection) {
+    const trackers = await fetchTrackers(connection);
+    const trackerDataList: any[] = [];
+    for (const tracker of trackers) {
+        const trackerData = await fetchTracker(connection, tracker);
+        console.log("trackerData", trackerData);
+        trackerDataList.push(trackerData);
+    }
+    return trackerDataList;
+}   
 
 export async function fetchTrackers(connection: Connection) {
     try {
+        console.log("window.solana", window.solana.publicKey.toBase58());
+        console.log("connection", connection);
         const provider = new AnchorProvider(connection, window.solana, {
             commitment: 'confirmed',
             preflightCommitment: 'confirmed'
@@ -79,6 +93,10 @@ export async function fetchStreak(connection: Connection, trackerId: any) {
             preflightCommitment: 'confirmed'
         });
         const program = getProgram(provider);
+
+        if (!provider.wallet.publicKey) {
+            throw new Error('Wallet not connected');
+        }
 
         const trackerStreakPda = getTrackerStreakPda(provider, trackerId);
 
@@ -156,3 +174,57 @@ export async function fetchTrackerStatusList(connection: Connection, trackerId: 
         return [];
     }
 }       
+
+export async function fetchNFTsList(connection: Connection) {
+    try {
+        const provider = new AnchorProvider(connection, window.solana, {
+            commitment: 'confirmed',
+            preflightCommitment: 'confirmed'
+        });
+        const program = getProgram(provider);
+
+        const nftTrackingPda = getNFTTrackingPda(provider);
+        const nfts = await program.methods
+        .getUserNfts()
+        .accounts({
+          nftTracking: nftTrackingPda,
+          user: provider.wallet.publicKey,
+        })
+        .view();
+
+        return nfts;
+    } catch (error) {
+        console.error('Error fetching NFTs:', error);
+        return [];
+    }
+}
+
+export async function addNFT(connection: Connection, nftMintAddress: string, nftMetadata: any, eligibleNFT: any): Promise<boolean> {
+    try {
+        const nftMint = new PublicKey(nftMintAddress);
+        const provider = new AnchorProvider(connection, window.solana, {
+            commitment: 'confirmed',
+            preflightCommitment: 'confirmed'
+        });
+        const program = getProgram(provider);
+
+        const metadata = [
+            { key: "name", value: eligibleNFT.title.toString() },
+            { key: "description", value: nftMetadata.jsonMetadata.description },
+            { key: "image", value: nftMetadata.imageUri }
+          ]
+        const nftTrackingPda = getNFTTrackingPda(provider);
+        await program.methods
+            .addNft(nftMint, metadata)
+            .accounts({
+                nftTracking: nftTrackingPda,
+                user: provider.wallet.publicKey,
+                systemProgram: SystemProgram.programId,
+            })
+            .rpc();
+        return true;
+    } catch (error) {
+        console.error('Error adding NFT:', error);
+        return false;
+    }
+}

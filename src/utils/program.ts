@@ -89,3 +89,11 @@ export const getNormalizedCurrentDate = () => {
     const oneDay = 86400;
     return Math.floor(currentDate / oneDay) * oneDay - 0 * oneDay;
 };
+
+export const getNFTTrackingPda = (provider: AnchorProvider) => {
+  const [nftTrackingPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("nftList"), provider.wallet.publicKey.toBuffer()],
+    PROGRAM_ID
+  );
+  return nftTrackingPda;
+};

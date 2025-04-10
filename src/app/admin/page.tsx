@@ -16,7 +16,8 @@ declare global {
 
 export default function AdminPage() {
   const { publicKey, connected } = useWallet();
-  const { connection } = useConnection();
+  // const { connection } = useConnection();
+  const connection = new web3.Connection("http://127.0.0.1:8899", "confirmed");
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);

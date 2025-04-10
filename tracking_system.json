@@ -8,6 +8,70 @@
   },
   "instructions": [
     {
+      "name": "add_nft",
+      "discriminator": [
+        55,
+        57,
+        85,
+        145,
+        81,
+        134,
+        220,
+        223
+      ],
+      "accounts": [
+        {
+          "name": "nft_tracking",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  102,
+                  116,
+                  76,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nft_address",
+          "type": "pubkey"
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "MetadataEntry"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "add_tracking_data",
       "discriminator": [
         245,
@@ -308,6 +372,55 @@
       }
     },
     {
+      "name": "get_user_nfts",
+      "discriminator": [
+        132,
+        138,
+        149,
+        65,
+        96,
+        139,
+        5,
+        254
+      ],
+      "accounts": [
+        {
+          "name": "nft_tracking",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  102,
+                  116,
+                  76,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user"
+        }
+      ],
+      "args": [],
+      "returns": {
+        "vec": {
+          "defined": {
+            "name": "NftInfo"
+          }
+        }
+      }
+    },
+    {
       "name": "get_user_streak",
       "discriminator": [
         57,
@@ -430,6 +543,19 @@
   ],
   "accounts": [
     {
+      "name": "NftTrackingData",
+      "discriminator": [
+        143,
+        55,
+        151,
+        183,
+        80,
+        121,
+        108,
+        139
+      ]
+    },
+    {
       "name": "Tracker",
       "discriminator": [
         31,
@@ -521,6 +647,70 @@
     }
   ],
   "types": [
+    {
+      "name": "MetadataEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NftInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nft_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "received_time",
+            "type": "u64"
+          },
+          {
+            "name": "metadata",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "MetadataEntry"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "NftTrackingData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "nfts",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "NftInfo"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "Track",
       "type": {
