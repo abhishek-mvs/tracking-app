@@ -176,96 +176,98 @@ export default function TrackerDetailPage({ params }: { params: { id: string } }
   };
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <div className="flex justify-between items-center mb-4 sm:mb-8 gap-2">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <button
-            onClick={() => router.push('/')}
-            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1.5 sm:py-2 px-2.5 sm:px-4 rounded text-xs sm:text-base flex items-center"
-          >
-            <span className="mr-1">←</span>
-            <span>Back</span>
-          </button>
-          <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">{trackerTitle}</h1>
+    <div className="min-h-screen bg-gray-900">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <div className="flex justify-between items-center mb-4 sm:mb-8 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={() => router.push('/')}
+              className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-1.5 sm:py-2 px-2.5 sm:px-4 rounded-lg text-xs sm:text-base flex items-center transition-all duration-200 ease-in-out"
+            >
+              <span className="mr-1">←</span>
+              <span>Back</span>
+            </button>
+            <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap text-white">{trackerTitle}</h1>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
-        {/* Left Block - Personal Streak Details */}
-        <div className="bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
-          <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Your Streak Details</h2>
-          {streakData && (
-            <div className="space-y-3">
-              <div className="text-base sm:text-lg">
-                <span className="font-semibold">Current Streak:</span> {streakData.streak} days
-              </div>
-              <div className="text-base sm:text-lg">
-                <span className="font-semibold">Longest Streak:</span> {streakData.longestStreak} days
-              </div>
-              <div className="text-base sm:text-lg">
-                <span className="font-semibold">Last Streak Date:</span> {new Date(streakData.lastStreakDate * 1000).toLocaleDateString()}
-              </div>
-              <div className="text-base sm:text-lg">
-                <span className="font-semibold">Longest Streak Date:</span> {new Date(streakData.longestStreakDate * 1000).toLocaleDateString()}
-              </div>
-            </div>
-          )}
-          <div className="mt-6">
-            {trackerList.length === 0 ? (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-center">
-                  Did you maintain your streak today?
-                </h3>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                  <button
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded transition-colors"
-                    onClick={() => handleTrackStatus(true)}
-                    disabled={loading}
-                  >
-                    Hurray! 🎉
-                  </button>
-                  <button
-                    className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded transition-colors"
-                    onClick={() => handleTrackStatus(false)}
-                    disabled={loading}
-                  >
-                    Nah! 😔
-                  </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+          {/* Left Block - Personal Streak Details */}
+          <div className="bg-gray-800 shadow-md rounded-lg px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
+            <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4 text-white">Your Streak Details</h2>
+            {streakData && (
+              <div className="space-y-3">
+                <div className="text-base sm:text-lg text-gray-300">
+                  <span className="font-semibold">Current Streak:</span> {streakData.streak} days
+                </div>
+                <div className="text-base sm:text-lg text-gray-300">
+                  <span className="font-semibold">Longest Streak:</span> {streakData.longestStreak} days
+                </div>
+                <div className="text-base sm:text-lg text-gray-300">
+                  <span className="font-semibold">Last Streak Date:</span> {new Date(streakData.lastStreakDate * 1000).toLocaleDateString()}
+                </div>
+                <div className="text-base sm:text-lg text-gray-300">
+                  <span className="font-semibold">Longest Streak Date:</span> {new Date(streakData.longestStreakDate * 1000).toLocaleDateString()}
                 </div>
               </div>
-            ) : (
-              <DailyTrackingStatus 
-                trackerList={trackerList} 
-                onTrack={handleTrackStatus}
-              />
+            )}
+            <div className="mt-6">
+              {trackerList.length === 0 ? (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-center text-white">
+                    Did you maintain your streak today?
+                  </h3>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                    <button
+                      className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 ease-in-out"
+                      onClick={() => handleTrackStatus(true)}
+                      disabled={loading}
+                    >
+                      Hurray! 🎉
+                    </button>
+                    <button
+                      className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 ease-in-out"
+                      onClick={() => handleTrackStatus(false)}
+                      disabled={loading}
+                    >
+                      Nah! 😔
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <DailyTrackingStatus 
+                  trackerList={trackerList} 
+                  onTrack={handleTrackStatus}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Right Block - Community Stats */}
+          <div className="bg-gray-800 shadow-md rounded-lg px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
+            <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4 text-white">Community Stats</h2>
+            {stats && (
+              <div className="space-y-3">
+                <div className="text-base sm:text-lg text-gray-300">
+                  <span className="font-semibold">Total Users Today:</span> {stats.uniqueUsers}
+                </div>
+                <div className="text-base sm:text-lg text-gray-300">
+                  <span className="font-semibold">Total Check-ins Today:</span> {stats.totalCount}
+                </div>
+                <div className="text-base sm:text-lg text-gray-300">
+                  <span className="font-semibold">Success Rate:</span> {stats.uniqueUsers > 0 ? ((stats.totalCount / stats.uniqueUsers) * 100).toFixed(1) : '0'}%
+                </div>
+              </div>
             )}
           </div>
-        </div>
 
-        {/* Right Block - Community Stats */}
-        <div className="bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
-          <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Community Stats</h2>
-          {stats && (
-            <div className="space-y-3">
-              <div className="text-base sm:text-lg">
-                <span className="font-semibold">Total Users Today:</span> {stats.uniqueUsers}
-              </div>
-              <div className="text-base sm:text-lg">
-                <span className="font-semibold">Total Check-ins Today:</span> {stats.totalCount}
-              </div>
-              <div className="text-base sm:text-lg">
-                <span className="font-semibold">Success Rate:</span> {stats.uniqueUsers > 0 ? ((stats.totalCount / stats.uniqueUsers) * 100).toFixed(1) : '0'}%
-              </div>
+          {trackerList.length > 0 && (
+            <div className="col-span-1 sm:col-span-2 bg-gray-800 shadow-md rounded-lg px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
+              <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4 text-center text-white">Streaks & Stats</h2>
+              <TrackerStreakGraph trackerList={trackerList} trackerStatsList={trackerStatsList} />
             </div>
           )}
         </div>
-
-        {trackerList.length > 0 && (
-          <div className="col-span-1 sm:col-span-2 bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8">
-            <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4 text-center">Streaks & Stats</h2>
-            <TrackerStreakGraph trackerList={trackerList} trackerStatsList={trackerStatsList} />
-          </div>
-        )}
       </div>
     </div>
   );

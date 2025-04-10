@@ -131,56 +131,40 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: {
-          mode: 'index',
-          intersect: false,
-        },
         scales: {
           x: {
             grid: {
-              display: true,
-              color: 'rgba(0, 0, 0, 0.1)',
+              color: 'rgba(255, 255, 255, 0.1)',
             },
             ticks: {
-              maxRotation: 45,
-              minRotation: 45,
+              color: 'rgba(255, 255, 255, 0.7)',
             },
           },
           y: {
-            beginAtZero: true,
             grid: {
-              display: true,
-              color: 'rgba(0, 0, 0, 0.1)',
+              color: 'rgba(255, 255, 255, 0.1)',
+            },
+            ticks: {
+              color: 'rgba(255, 255, 255, 0.7)',
             },
             title: {
               display: true,
-              text: 'User Streak (Days)',
-              font: {
-                size: 12,
-                weight: 'normal',
-              },
-            },
-            ticks: {
-              stepSize: 1,
+              text: 'Streak (days)',
+              color: 'rgba(255, 255, 255, 0.7)',
             },
           },
           y1: {
             position: 'right',
-            title: {
-              display: true,
-              text: 'Community Success Rate %',
-              font: {
-                size: 12,
-                weight: 'normal',
-              },
-            },
-            min: 0,
-            max: 100,
             grid: {
               drawOnChartArea: false,
             },
             ticks: {
-              callback: value => `${value}%`,
+              color: 'rgba(255, 255, 255, 0.7)',
+            },
+            title: {
+              display: true,
+              text: 'Success Rate (%)',
+              color: 'rgba(255, 255, 255, 0.7)',
             },
           },
         },
@@ -196,9 +180,15 @@ const TrackerStreakGraph = ({ trackerList, trackerStatsList }: TrackerStreakGrap
               font: {
                 size: 12,
               },
+              color: 'rgba(255, 255, 255, 0.7)',
             },
           },
           tooltip: {
+            backgroundColor: 'rgba(31, 41, 55, 0.9)',
+            titleColor: 'rgba(255, 255, 255, 0.9)',
+            bodyColor: 'rgba(255, 255, 255, 0.9)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
             callbacks: {
               label: context => {
                 const label = context.dataset.label || '';

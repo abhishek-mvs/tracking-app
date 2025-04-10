@@ -61,19 +61,19 @@ export default function AdminPage() {
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 gap-2">
-        <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Admin Dashboard</h1>
         <WalletMultiButton />
       </div>
 
       {connected ? (
         <div className="max-w-md mx-auto">
-          <div className="bg-white shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8 mb-4">
+          <div className="bg-gray-800 shadow-md rounded px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-8 mb-4">
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
+              <label className="block text-gray-300 text-sm font-bold mb-2" htmlFor="title">
                 Title
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="shadow appearance-none border border-gray-700 bg-gray-700 rounded w-full py-2 px-3 text-sm sm:text-base text-white leading-tight focus:outline-none focus:shadow-outline"
                 id="title"
                 type="text"
                 placeholder="Enter tracker title"
@@ -82,11 +82,11 @@ export default function AdminPage() {
               />
             </div>
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+              <label className="block text-gray-300 text-sm font-bold mb-2" htmlFor="description">
                 Description
               </label>
               <textarea
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-sm sm:text-base text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="shadow appearance-none border border-gray-700 bg-gray-700 rounded w-full py-2 px-3 text-sm sm:text-base text-white leading-tight focus:outline-none focus:shadow-outline"
                 id="description"
                 placeholder="Enter tracker description"
                 value={description}
@@ -95,7 +95,7 @@ export default function AdminPage() {
             </div>
             <div className="flex items-center justify-between">
               <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm sm:text-base"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm sm:text-base"
                 onClick={handleCreateTracker}
                 disabled={loading}
               >
@@ -106,7 +106,7 @@ export default function AdminPage() {
         </div>
       ) : (
         <div className="text-center">
-          <p className="text-base sm:text-xl">Please connect your wallet to access the admin dashboard.</p>
+          <p className="text-base sm:text-xl text-gray-300">Please connect your wallet to access the admin dashboard.</p>
         </div>
       )}
     </div>

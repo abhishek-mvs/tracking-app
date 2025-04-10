@@ -21,17 +21,17 @@ const DailyTrackingStatus = ({ trackerList, onTrack }: DailyTrackingStatusProps)
   if (!lastTracked || !isToday) {
     return (
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-center mb-4">
+        <h2 className="text-xl font-semibold text-center mb-4 text-white">
           Did you maintain your streak today?
         </h2>
         <button
-          className="w-full py-4 px-6 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+          className="w-full py-4 px-6 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors"
           onClick={() => onTrack(true)}
         >
           Hurray! 🎉
         </button>
         <button
-          className="w-full py-4 px-6 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+          className="w-full py-4 px-6 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
           onClick={() => onTrack(false)}
         >
           Nah! 😔
@@ -41,22 +41,22 @@ const DailyTrackingStatus = ({ trackerList, onTrack }: DailyTrackingStatusProps)
   }
 
   return (
-    <div className="text-center p-6 rounded-lg bg-gray-50">
+    <div className="text-center p-6 rounded-lg bg-gray-700">
       {lastTracked.count === 1 ? (
         <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-green-600">
+          <h3 className="text-xl font-semibold text-green-400">
             Amazing work today! 🌟
           </h3>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             You're building a great streak. Keep it up!
           </p>
         </div>
       ) : (
         <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-blue-600">
+          <h3 className="text-xl font-semibold text-blue-400">
             Tomorrow is a new day! 💪
           </h3>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             Every setback is a setup for a comeback. We believe in you!
           </p>
         </div>

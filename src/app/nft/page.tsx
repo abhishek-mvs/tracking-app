@@ -272,10 +272,10 @@ export default function NFTPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <div className="text-center py-8">
-            <p className="text-lg text-gray-600">Loading...</p>
+            <p className="text-lg text-gray-300">Loading...</p>
           </div>
         </div>
       </div>
@@ -283,18 +283,18 @@ export default function NFTPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header Section */}
         <div className="flex items-center gap-3 mb-2">
           <span role="img" aria-label="trophy" className="text-4xl">🏆</span>
-          <h1 className="text-4xl font-bold text-gray-900">Your Streak Rewards</h1>
+          <h1 className="text-4xl font-bold text-white">Your Streak Rewards</h1>
         </div>
-        <p className="text-xl text-gray-600 mb-12">Stay consistent. Earn exclusive NFTs.</p>
+        <p className="text-xl text-gray-300 mb-12">Stay consistent. Earn exclusive NFTs.</p>
 
         {!connected ? (
           <div className="text-center py-8">
-            <p className="text-lg text-gray-600">Please connect your wallet to view your streak rewards</p>
+            <p className="text-lg text-gray-300">Please connect your wallet to view your streak rewards</p>
           </div>
         ) : (
           <>
@@ -302,23 +302,23 @@ export default function NFTPage() {
             <div className="mb-12">
               <div className="flex items-center gap-3 mb-6">
                 <span role="img" aria-label="box" className="text-3xl">📦</span>
-                <h2 className="text-2xl font-bold text-gray-900">Your Minted NFTs</h2>
+                <h2 className="text-2xl font-bold text-white">Your Minted NFTs</h2>
               </div>
               
               {isLoadingNfts ? (
                 <div className="text-center py-8">
-                  <p className="text-lg text-gray-600">Loading your NFTs...</p>
+                  <p className="text-lg text-gray-300">Loading your NFTs...</p>
                 </div>
               ) : nfts.length === 0 ? (
-                <div className="text-center py-8 bg-white rounded-lg shadow-md">
-                  <p className="text-lg text-gray-600">You don't have any NFTs yet</p>
+                <div className="text-center py-8 bg-gray-800 rounded-lg shadow-md">
+                  <p className="text-lg text-gray-300">You don't have any NFTs yet</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
                   {(showAllNfts ? nfts : nfts.slice(0, 2)).map((nft, index) => (
                     <div 
                       key={index} 
-                      className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow flex items-center gap-4"
+                      className="bg-gray-800 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow flex items-center gap-4"
                       onClick={() => {
                         setSelectedNFT(nft);
                         setIsModalOpen(true);
@@ -332,16 +332,16 @@ export default function NFTPage() {
                             className="w-full h-full object-cover rounded-lg"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-lg">
+                          <div className="w-full h-full bg-gray-700 flex items-center justify-center rounded-lg">
                             <span role="img" aria-label="question" className="text-2xl">❓</span>
                           </div>
                         )}
                       </div>
                       <div className="flex-grow">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-white">
                           {nft.jsonMetadata?.name || 'Unnamed NFT'}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-1">
+                        <p className="text-sm text-gray-400 mb-1">
                           {nft.jsonMetadata?.trackerName ? `Tracker: ${nft.jsonMetadata.trackerName}` : 'Tracker: Unknown'}
                         </p>
                         <p className="text-xs text-gray-500 truncate font-mono">
@@ -349,7 +349,7 @@ export default function NFTPage() {
                             nft.mintAddress.toString().slice(0, 4) + '...' + nft.mintAddress.toString().slice(-4) : 
                             nft.mintAddress.slice(0, 4) + '...' + nft.mintAddress.slice(-4)}
                         </p>
-                        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-sm mt-1">
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-900 text-green-300 rounded-full text-sm mt-1">
                           <span role="img" aria-label="checkmark" className="text-xs">✅</span>
                           Claimed
                         </div>
@@ -358,7 +358,7 @@ export default function NFTPage() {
                   ))}
                   {nfts.length > 2 && (
                     <button 
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2"
+                      className="text-blue-400 hover:text-blue-300 text-sm font-medium mt-2"
                       onClick={() => setShowAllNfts(!showAllNfts)}
                     >
                       {showAllNfts ? 'Show Less' : `Show ${nfts.length - 2} More`}
@@ -370,11 +370,11 @@ export default function NFTPage() {
 
             {/* NFT Modal */}
             {isModalOpen && selectedNFT && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 max-w-2xl w-full relative">
+              <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+                <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full relative">
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -389,19 +389,19 @@ export default function NFTPage() {
                           className="w-full h-full object-contain"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <div className="w-full h-full bg-gray-700 flex items-center justify-center">
                           <span role="img" aria-label="question" className="text-4xl">❓</span>
                         </div>
                       )}
                     </div>
-                    <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                    <h3 className="text-2xl font-semibold text-white mb-2">
                       {selectedNFT.jsonMetadata?.name || 'Unnamed NFT'}
                     </h3>
                     <a
                       href={`https://explorer.solana.com/address/${typeof selectedNFT.mintAddress === 'object' ? selectedNFT.mintAddress.toString() : selectedNFT.mintAddress}?cluster=devnet`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-flex items-center gap-1"
+                      className="text-sm text-blue-400 hover:text-blue-300 mb-2 inline-flex items-center gap-1"
                     >
                       View on Solana
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -409,7 +409,7 @@ export default function NFTPage() {
                       </svg>
                     </a>
                     {selectedNFT.jsonMetadata?.description && (
-                      <p className="text-gray-600 text-center mt-2">
+                      <p className="text-gray-300 text-center mt-2">
                         {selectedNFT.jsonMetadata.description}
                       </p>
                     )}
@@ -422,7 +422,7 @@ export default function NFTPage() {
             <div className="mb-12">
               <div className="flex items-center gap-3 mb-6">
                 <span role="img" aria-label="target" className="text-3xl">🎯</span>
-                <h2 className="text-2xl font-bold text-gray-900">Eligible Rewards</h2>
+                <h2 className="text-2xl font-bold text-white">Eligible Rewards</h2>
               </div>
 
               <div className="grid grid-cols-1 gap-6">
@@ -433,33 +433,32 @@ export default function NFTPage() {
                   return (
                     <div
                       key={`tracker-${tracker.id}`}
-                      className="bg-white rounded-lg shadow-md p-6"
+                      className="bg-gray-800 rounded-lg shadow-md p-6"
                     >
                       <div className="flex items-center gap-3 mb-4">
                         <span role="img" aria-label="fire" className="text-3xl">🔥</span>
-                        <h3 className="text-xl font-semibold text-gray-900">{tracker.title}</h3>
+                        <h3 className="text-xl font-semibold text-white">{tracker.title}</h3>
                       </div>
 
                       <div className="flex items-center gap-2 mb-4">
-                        <p className="text-lg">Current Streak: {streak} days</p>
-                        
+                        <p className="text-lg text-gray-300">Current Streak: {streak} days</p>
                       </div>
 
                       {eligibleNFT ? (
                         <>
-                          <p className="text-lg text-green-600 mb-4">
+                          <p className="text-lg text-green-400 mb-4">
                             You are eligible for: {eligibleNFT.title}
                           </p>
                           <button
                             onClick={() => handleMintNFT(eligibleNFT, tracker)}
                             disabled={isLoading}
-                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-lg transition-colors"
+                            className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-lg font-semibold rounded-lg transition-colors"
                           >
                             {isLoading ? 'Minting...' : 'Mint NFT'}
                           </button>
                         </>
                       ) : (
-                        <p className="text-lg text-gray-600">
+                        <p className="text-lg text-gray-400">
                           Keep going! You need {streak < 3 ? 3 - streak : streak < 7 ? 7 - streak : 30 - streak} more days to earn an NFT.
                         </p>
                       )}
