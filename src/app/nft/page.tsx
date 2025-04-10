@@ -75,6 +75,9 @@ export default function NFTPage() {
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [isLoadingNfts, setIsLoadingNfts] = useState(false);
   const [blobUrls, setBlobUrls] = useState<Record<string, string>>({});
+  const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAllNfts, setShowAllNfts] = useState(false);
 
   // Cleanup function for blob URLs
   useEffect(() => {
@@ -131,17 +134,23 @@ export default function NFTPage() {
           console.log("nft", nft);
           
           // Extract metadata from the array
-          const name = nft.metadata.find((m: NFTMetadataItem) => m.key === 'name')?.value || 'Unnamed NFT';
-          const description = nft.metadata.find((m: NFTMetadataItem) => m.key === 'description')?.value || '';
-          const imageUri = nft.metadata.find((m: NFTMetadataItem) => m.key === 'image')?.value || '';
+          const name = nft.nftInfo.metadata.find((m: NFTMetadataItem) => m.key === 'name')?.value || 'Unnamed NFT';
+          const description = nft.nftInfo.metadata.find((m: NFTMetadataItem) => m.key === 'description')?.value || '';
+          const imageUri = nft.nftInfo.metadata.find((m: NFTMetadataItem) => m.key === 'image')?.value || '';
+          const trackerName = nft.nftInfo.metadata.find((m: NFTMetadataItem) => m.key === 'trackerName')?.value || '';
+          const trackerId = nft.nftInfo.metadata.find((m: NFTMetadataItem) => m.key === 'trackerId')?.value || '';
+          const mintTimestamp = nft.nftInfo.metadata.find((m: NFTMetadataItem) => m.key === 'mintTimestamp')?.value || '';
 
           const nftData = {
-            mintAddress: nft.nftAddress,
+            mintAddress: nft.nftInfo.nftAddress,
             imageUri,
             jsonMetadata: {
               name,
               description,
-              image: imageUri
+              image: imageUri,
+              trackerName,
+              trackerId,
+              mintTimestamp
             }
           };
           
@@ -161,14 +170,52 @@ export default function NFTPage() {
     fetchData();
   }, [connected, publicKey, router]);
 
-  const getEligibleNFT = (streak: number) => {
-    if (streak >= 30) return NFT_OPTIONS[2]; // 30-day NFT
-    if (streak >= 7) return NFT_OPTIONS[1]; // 7-day NFT
-    if (streak >= 3) return NFT_OPTIONS[0]; // 3-day NFT
+  const getEligibleNFT = (streak: number, trackerId: number) => {
+    // Find the latest NFT for this tracker
+    const trackerNfts = nfts.filter(nft => 
+      nft.jsonMetadata?.trackerId === trackerId.toString()
+    ).sort((a, b) => {
+      const timestampA = parseInt(a.jsonMetadata?.mintTimestamp || '0');
+      const timestampB = parseInt(b.jsonMetadata?.mintTimestamp || '0');
+      return timestampB - timestampA; // Sort by most recent first
+    });
+
+    const latestNft = trackerNfts[0];
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+
+    if (latestNft) {
+      const mintTimestamp = parseInt(latestNft.jsonMetadata?.mintTimestamp || '0');
+      const daysSinceMint = (currentTime - mintTimestamp) / (24 * 60 * 60);
+
+      // Find the days requirement of the last minted NFT
+      let lastMintedDays = 0;
+      if (latestNft.mintAddress.toString() === NFT_OPTIONS[0].mintAddress) lastMintedDays = 3;
+      else if (latestNft.mintAddress.toString() === NFT_OPTIONS[1].mintAddress) lastMintedDays = 7;
+      else if (latestNft.mintAddress.toString() === NFT_OPTIONS[2].mintAddress) lastMintedDays = 30;
+
+      // If user has a 3-day NFT, next target is 7 days
+      if (lastMintedDays === 3 && streak >= 7) {
+        return NFT_OPTIONS[1];
+      }
+      // If user has a 7-day NFT, next target is 30 days
+      else if (lastMintedDays === 7 && streak >= 30) {
+        return NFT_OPTIONS[2];
+      }
+      // If user has the 30-day NFT, no more NFTs to earn
+      else if (lastMintedDays === 30) {
+        return null;
+      }
+    } else {
+      // No NFTs yet, check for first eligible NFT
+      if (streak >= 30) return NFT_OPTIONS[2];
+      if (streak >= 7) return NFT_OPTIONS[1];
+      if (streak >= 3) return NFT_OPTIONS[0];
+    }
+
     return null;
   };
 
-  const handleMintNFT = async (eligibleNFT: any) => {
+  const handleMintNFT = async (eligibleNFT: any, tracker: Tracker) => {
     if (!connected || !publicKey) {
       toast.error('Please connect your wallet first');
       return;
@@ -187,32 +234,31 @@ export default function NFTPage() {
         while (retries > 0 && !nftMetadata) {
           try {
             nftMetadata = await fetchNftMetadata(nftMint);
-            if (nftMetadata) {
-              const success = await addNFT(connection, nftMint, nftMetadata, eligibleNFT);
-              if (success) {
-                console.log("NFT added successfully!");
-                toast.success('NFT minted and added successfully!');
-                break;
-              }
-              else {
-                console.log(`Retry ${6 - retries}: Waiting for NFT metadata...`);
-                if (retries > 1) {
-                // Wait for 2 seconds before retrying
+            if (!nftMetadata) {
+              console.log(`Retry ${6 - retries}: Metadata is null, retrying...`);
+              if (retries > 1) {
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                }
               }
             }
           } catch (error) {
-            console.log(`Retry ${6 - retries}: Waiting for NFT metadata...`);
+            console.log(`Retry ${6 - retries}: Error fetching metadata, retrying...`);
             if (retries > 1) {
-              // Wait for 2 seconds before retrying
               await new Promise(resolve => setTimeout(resolve, 2000));
             }
           }
           retries--;
         }
 
-        if (!nftMetadata) {
+        if (nftMetadata) {
+          // Only proceed with addNFT if we have valid metadata
+          const success = await addNFT(connection, nftMint, nftMetadata, eligibleNFT, tracker);
+          if (success) {
+            console.log("NFT added successfully!");
+            toast.success('NFT minted and added successfully!');
+          } else {
+            toast.error('Failed to add NFT to tracker');
+          }
+        } else {
           toast.error('NFT was minted but metadata could not be fetched. Please refresh the page in a few moments.');
         }
       }
@@ -239,7 +285,12 @@ export default function NFTPage() {
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Streak Rewards</h1>
+        {/* Header Section */}
+        <div className="flex items-center gap-3 mb-2">
+          <span role="img" aria-label="trophy" className="text-4xl">🏆</span>
+          <h1 className="text-4xl font-bold text-gray-900">Your Streak Rewards</h1>
+        </div>
+        <p className="text-xl text-gray-600 mb-12">Stay consistent. Earn exclusive NFTs.</p>
 
         {!connected ? (
           <div className="text-center py-8">
@@ -247,98 +298,175 @@ export default function NFTPage() {
           </div>
         ) : (
           <>
+            {/* NFTs Section */}
             <div className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Your NFTs</h2>
+              <div className="flex items-center gap-3 mb-6">
+                <span role="img" aria-label="box" className="text-3xl">📦</span>
+                <h2 className="text-2xl font-bold text-gray-900">Your Minted NFTs</h2>
+              </div>
+              
               {isLoadingNfts ? (
                 <div className="text-center py-8">
                   <p className="text-lg text-gray-600">Loading your NFTs...</p>
                 </div>
               ) : nfts.length === 0 ? (
-                <div className="text-center py-8">
+                <div className="text-center py-8 bg-white rounded-lg shadow-md">
                   <p className="text-lg text-gray-600">You don't have any NFTs yet</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {nfts.map((nft, index) => (
-                    <div key={index} className="bg-white rounded-lg shadow-md p-4">
-                      <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
-                        {nft.blobUrl ? (
-                          <img 
-                            src={nft.blobUrl}
-                            alt="NFT" 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback to imageUri if blob URL fails
-                              if (nft.imageUri) {
-                                e.currentTarget.src = nft.imageUri;
-                              }
-                            }}
-                          />
-                        ) : nft.imageUri ? (
+                <div className="flex flex-col gap-4">
+                  {(showAllNfts ? nfts : nfts.slice(0, 2)).map((nft, index) => (
+                    <div 
+                      key={index} 
+                      className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow flex items-center gap-4"
+                      onClick={() => {
+                        setSelectedNFT(nft);
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      <div className="w-24 h-24 flex-shrink-0">
+                        {nft.imageUri ? (
                           <img 
                             src={nft.imageUri}
-                            alt="NFT" 
-                            className="w-full h-full object-cover"
+                            alt={nft.jsonMetadata?.name || 'NFT'} 
+                            className="w-full h-full object-cover rounded-lg"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-gray-500">No image available</span>
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-lg">
+                            <span role="img" aria-label="question" className="text-2xl">❓</span>
                           </div>
                         )}
                       </div>
-                      <div className="p-4">
+                      <div className="flex-grow">
                         <h3 className="text-lg font-semibold text-gray-900">
                           {nft.jsonMetadata?.name || 'Unnamed NFT'}
                         </h3>
-                        <p className="text-sm text-gray-600 truncate">
-                          {typeof nft.mintAddress === 'object' ? nft.mintAddress.toString() : nft.mintAddress}
+                        <p className="text-sm text-gray-600 mb-1">
+                          {nft.jsonMetadata?.trackerName ? `Tracker: ${nft.jsonMetadata.trackerName}` : 'Tracker: Unknown'}
                         </p>
+                        <p className="text-xs text-gray-500 truncate font-mono">
+                          {typeof nft.mintAddress === 'object' ? 
+                            nft.mintAddress.toString().slice(0, 4) + '...' + nft.mintAddress.toString().slice(-4) : 
+                            nft.mintAddress.slice(0, 4) + '...' + nft.mintAddress.slice(-4)}
+                        </p>
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-sm mt-1">
+                          <span role="img" aria-label="checkmark" className="text-xs">✅</span>
+                          Claimed
+                        </div>
                       </div>
                     </div>
                   ))}
+                  {nfts.length > 2 && (
+                    <button 
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2"
+                      onClick={() => setShowAllNfts(!showAllNfts)}
+                    >
+                      {showAllNfts ? 'Show Less' : `Show ${nfts.length - 2} More`}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
-              {trackers.map((tracker) => {
-                const streak = trackerStreaks[tracker.id] || 0;
-                const eligibleNFT = getEligibleNFT(streak);
-
-                return (
-                  <div
-                    key={`tracker-${tracker.id}`}
-                    className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+            {/* NFT Modal */}
+            {isModalOpen && selectedNFT && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-2xl w-full relative">
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
                   >
-                    <h2 className="text-xl font-semibold text-gray-900">{tracker.title}</h2>
-                    <p className="mt-2 text-gray-600">{tracker.description}</p>
-                    <div className="mt-4">
-                      <p className="text-lg font-medium text-gray-700">
-                        Current Streak: {streak} days
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <div className="flex flex-col items-center">
+                    <div className="w-full aspect-square max-w-md mb-4">
+                      {selectedNFT.imageUri ? (
+                        <img 
+                          src={selectedNFT.imageUri}
+                          alt={selectedNFT.jsonMetadata?.name || 'NFT'} 
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <span role="img" aria-label="question" className="text-4xl">❓</span>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                      {selectedNFT.jsonMetadata?.name || 'Unnamed NFT'}
+                    </h3>
+                    <a
+                      href={`https://explorer.solana.com/address/${typeof selectedNFT.mintAddress === 'object' ? selectedNFT.mintAddress.toString() : selectedNFT.mintAddress}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-flex items-center gap-1"
+                    >
+                      View on Solana
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                    {selectedNFT.jsonMetadata?.description && (
+                      <p className="text-gray-600 text-center mt-2">
+                        {selectedNFT.jsonMetadata.description}
                       </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Eligible Rewards Section */}
+            <div className="mb-12">
+              <div className="flex items-center gap-3 mb-6">
+                <span role="img" aria-label="target" className="text-3xl">🎯</span>
+                <h2 className="text-2xl font-bold text-gray-900">Eligible Rewards</h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                {trackers.map((tracker) => {
+                  const streak = trackerStreaks[tracker.id] || 0;
+                  const eligibleNFT = getEligibleNFT(streak, tracker.id);
+
+                  return (
+                    <div
+                      key={`tracker-${tracker.id}`}
+                      className="bg-white rounded-lg shadow-md p-6"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <span role="img" aria-label="fire" className="text-3xl">🔥</span>
+                        <h3 className="text-xl font-semibold text-gray-900">{tracker.title}</h3>
+                      </div>
+
+                      <div className="flex items-center gap-2 mb-4">
+                        <p className="text-lg">Current Streak: {streak} days</p>
+                        
+                      </div>
+
                       {eligibleNFT ? (
-                        <div className="mt-4">
-                          <h3 className="text-lg font-semibold text-green-600">
+                        <>
+                          <p className="text-lg text-green-600 mb-4">
                             You are eligible for: {eligibleNFT.title}
-                          </h3>
-                          <p className="mt-2 text-gray-600">{eligibleNFT.description}</p>
+                          </p>
                           <button
-                            onClick={() => handleMintNFT(eligibleNFT)}
+                            onClick={() => handleMintNFT(eligibleNFT, tracker)}
                             disabled={isLoading}
-                            className="mt-4 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
+                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-lg transition-colors"
                           >
                             {isLoading ? 'Minting...' : 'Mint NFT'}
                           </button>
-                        </div>
+                        </>
                       ) : (
-                        <p className="mt-4 text-gray-600">
+                        <p className="text-lg text-gray-600">
                           Keep going! You need {streak < 3 ? 3 - streak : streak < 7 ? 7 - streak : 30 - streak} more days to earn an NFT.
                         </p>
                       )}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </>
         )}

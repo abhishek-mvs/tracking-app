@@ -31,15 +31,49 @@
                   110,
                   102,
                   116,
-                  76,
+                  95,
+                  116,
+                  114,
+                  97,
+                  99,
+                  107,
                   105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_nft",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
                   115,
+                  101,
+                  114,
+                  95,
+                  110,
+                  102,
                   116
                 ]
               },
               {
                 "kind": "account",
                 "path": "user"
+              },
+              {
+                "kind": "arg",
+                "path": "nft_address"
               }
             ]
           }
@@ -385,6 +419,9 @@
       ],
       "accounts": [
         {
+          "name": "user"
+        },
+        {
           "name": "nft_tracking",
           "pda": {
             "seeds": [
@@ -394,10 +431,15 @@
                   110,
                   102,
                   116,
-                  76,
+                  95,
+                  116,
+                  114,
+                  97,
+                  99,
+                  107,
                   105,
-                  115,
-                  116
+                  110,
+                  103
                 ]
               },
               {
@@ -406,18 +448,11 @@
               }
             ]
           }
-        },
-        {
-          "name": "user"
         }
       ],
       "args": [],
       "returns": {
-        "vec": {
-          "defined": {
-            "name": "NftInfo"
-          }
-        }
+        "vec": "pubkey"
       }
     },
     {
@@ -632,6 +667,19 @@
         55,
         187
       ]
+    },
+    {
+      "name": "UserNft",
+      "discriminator": [
+        118,
+        117,
+        125,
+        216,
+        67,
+        180,
+        173,
+        226
+      ]
     }
   ],
   "errors": [
@@ -644,6 +692,11 @@
       "code": 6001,
       "name": "TrackingDataAlreadyExists",
       "msg": "Tracking data already exists for this date"
+    },
+    {
+      "code": 6002,
+      "name": "CollectionFull",
+      "msg": "Collection is full"
     }
   ],
   "types": [
@@ -699,13 +752,9 @@
             "type": "pubkey"
           },
           {
-            "name": "nfts",
+            "name": "mint_addresses",
             "type": {
-              "vec": {
-                "defined": {
-                  "name": "NftInfo"
-                }
-              }
+              "vec": "pubkey"
             }
           }
         ]
@@ -876,6 +925,28 @@
                   "name": "Track"
                 }
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserNft",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nft_info",
+            "type": {
+              "defined": {
+                "name": "NftInfo"
+              }
+            }
+          },
+          {
+            "name": "next_nft",
+            "type": {
+              "option": "pubkey"
             }
           }
         ]

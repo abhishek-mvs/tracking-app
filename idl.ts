@@ -37,15 +37,49 @@ export type TrackingSystem = {
                   110,
                   102,
                   116,
-                  76,
+                  95,
+                  116,
+                  114,
+                  97,
+                  99,
+                  107,
                   105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "userNft",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
                   115,
+                  101,
+                  114,
+                  95,
+                  110,
+                  102,
                   116
                 ]
               },
               {
                 "kind": "account",
                 "path": "user"
+              },
+              {
+                "kind": "arg",
+                "path": "nftAddress"
               }
             ]
           }
@@ -391,6 +425,9 @@ export type TrackingSystem = {
       ],
       "accounts": [
         {
+          "name": "user"
+        },
+        {
           "name": "nftTracking",
           "pda": {
             "seeds": [
@@ -400,10 +437,15 @@ export type TrackingSystem = {
                   110,
                   102,
                   116,
-                  76,
+                  95,
+                  116,
+                  114,
+                  97,
+                  99,
+                  107,
                   105,
-                  115,
-                  116
+                  110,
+                  103
                 ]
               },
               {
@@ -412,18 +454,11 @@ export type TrackingSystem = {
               }
             ]
           }
-        },
-        {
-          "name": "user"
         }
       ],
       "args": [],
       "returns": {
-        "vec": {
-          "defined": {
-            "name": "nftInfo"
-          }
-        }
+        "vec": "pubkey"
       }
     },
     {
@@ -638,6 +673,19 @@ export type TrackingSystem = {
         55,
         187
       ]
+    },
+    {
+      "name": "userNft",
+      "discriminator": [
+        118,
+        117,
+        125,
+        216,
+        67,
+        180,
+        173,
+        226
+      ]
     }
   ],
   "errors": [
@@ -650,6 +698,11 @@ export type TrackingSystem = {
       "code": 6001,
       "name": "trackingDataAlreadyExists",
       "msg": "Tracking data already exists for this date"
+    },
+    {
+      "code": 6002,
+      "name": "collectionFull",
+      "msg": "Collection is full"
     }
   ],
   "types": [
@@ -705,13 +758,9 @@ export type TrackingSystem = {
             "type": "pubkey"
           },
           {
-            "name": "nfts",
+            "name": "mintAddresses",
             "type": {
-              "vec": {
-                "defined": {
-                  "name": "nftInfo"
-                }
-              }
+              "vec": "pubkey"
             }
           }
         ]
@@ -882,6 +931,28 @@ export type TrackingSystem = {
                   "name": "track"
                 }
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "userNft",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nftInfo",
+            "type": {
+              "defined": {
+                "name": "nftInfo"
+              }
+            }
+          },
+          {
+            "name": "nextNft",
+            "type": {
+              "option": "pubkey"
             }
           }
         ]

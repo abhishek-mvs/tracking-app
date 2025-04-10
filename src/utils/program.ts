@@ -92,8 +92,16 @@ export const getNormalizedCurrentDate = () => {
 
 export const getNFTTrackingPda = (provider: AnchorProvider) => {
   const [nftTrackingPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("nftList"), provider.wallet.publicKey.toBuffer()],
+    [Buffer.from("nft_tracking"), provider.wallet.publicKey.toBuffer()],
     PROGRAM_ID
   );
   return nftTrackingPda;
+};
+
+export const getUserNftPda = (provider: AnchorProvider, nftAddress: PublicKey) => {
+  const [userNftPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("user_nft"), provider.wallet.publicKey.toBuffer(), nftAddress.toBuffer()],
+    PROGRAM_ID
+  );
+  return userNftPda;
 };

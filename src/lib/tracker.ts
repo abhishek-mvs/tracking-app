@@ -1,4 +1,4 @@
-import { getNFTTrackingPda, getNormalizedCurrentDate, getTrackerPda, getTrackerRegistryPda, getTrackerStatsListPda, getTrackerStatsPda, getTrackerStreakPda, getTrackingDataPda } from "@/utils/program";
+import { getNFTTrackingPda, getNormalizedCurrentDate, getTrackerPda, getTrackerRegistryPda, getTrackerStatsListPda, getTrackerStatsPda, getTrackerStreakPda, getTrackingDataPda, getUserNftPda } from "@/utils/program";
 import { getProgram } from "@/utils/program";
 import { AnchorProvider, BN } from "@coral-xyz/anchor";
 import { Connection, SystemProgram, PublicKey } from "@solana/web3.js";
@@ -184,14 +184,19 @@ export async function fetchNFTsList(connection: Connection) {
         const program = getProgram(provider);
 
         const nftTrackingPda = getNFTTrackingPda(provider);
-        const nfts = await program.methods
+        const mintAddresses = await program.methods
         .getUserNfts()
         .accounts({
-          nftTracking: nftTrackingPda,
-          user: provider.wallet.publicKey,
+            nftTracking: nftTrackingPda,
+            user: provider.wallet.publicKey,
         })
         .view();
-
+        const nfts = [];
+        for (const mintAddress of mintAddresses) {
+            const nftPda = getUserNftPda(provider, mintAddress);
+            const nft = await program.account.userNft.fetch(nftPda);
+            nfts.push(nft);
+        }
         return nfts;
     } catch (error) {
         console.error('Error fetching NFTs:', error);
@@ -199,7 +204,7 @@ export async function fetchNFTsList(connection: Connection) {
     }
 }
 
-export async function addNFT(connection: Connection, nftMintAddress: string, nftMetadata: any, eligibleNFT: any): Promise<boolean> {
+export async function addNFT(connection: Connection, nftMintAddress: string, nftMetadata: any, eligibleNFT: any, tracker: any): Promise<boolean> {
     try {
         const nftMint = new PublicKey(nftMintAddress);
         const provider = new AnchorProvider(connection, window.solana, {
@@ -207,17 +212,23 @@ export async function addNFT(connection: Connection, nftMintAddress: string, nft
             preflightCommitment: 'confirmed'
         });
         const program = getProgram(provider);
-
+        const currentTimestamp = Math.floor(Date.now() / 1000);
         const metadata = [
             { key: "name", value: eligibleNFT.title.toString() },
             { key: "description", value: nftMetadata.jsonMetadata.description },
+            { key: "trackerName", value: tracker.title.toString() },
+            { key: "trackerId", value: tracker.id.toString() },
+            { key: "mintTimestamp", value: currentTimestamp.toString() },
             { key: "image", value: nftMetadata.imageUri }
           ]
+        console.log("metadata", metadata);
         const nftTrackingPda = getNFTTrackingPda(provider);
+        const userNftPda = getUserNftPda(provider, nftMint)
         await program.methods
             .addNft(nftMint, metadata)
             .accounts({
                 nftTracking: nftTrackingPda,
+                userNft: userNftPda,
                 user: provider.wallet.publicKey,
                 systemProgram: SystemProgram.programId,
             })
